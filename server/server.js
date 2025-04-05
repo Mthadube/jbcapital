@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const connectDB = require('./db');
 const mountRoutes = require('./routes');
 const { User, Document, Loan, Application } = require('./models');
@@ -19,9 +20,30 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// Create sample documents folder if it doesn't exist
+const publicDocsDir = path.join(__dirname, '../public/documents');
+if (!fs.existsSync(publicDocsDir)) {
+  fs.mkdirSync(publicDocsDir, { recursive: true });
+  
+  // Copy a sample PDF for testing if it doesn't exist
+  const samplePdfPath = path.join(publicDocsDir, 'sample-pdf.pdf');
+  if (!fs.existsSync(samplePdfPath)) {
+    try {
+      // Create a basic text file as a placeholder if no sample PDF available
+      fs.writeFileSync(samplePdfPath, 'Sample PDF content');
+      console.log('Created sample PDF placeholder');
+    } catch (err) {
+      console.error('Error creating sample PDF:', err);
+    }
+  }
+}
+
 // Serve static files from the React build folder in production
 const clientBuildPath = path.join(__dirname, '../dist');
 app.use(express.static(clientBuildPath));
+
+// Serve documents from the public/documents directory
+app.use('/documents', express.static(path.join(__dirname, '../public/documents')));
 
 // Create default admin user if none exists
 const initializeAdminUser = async () => {

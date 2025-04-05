@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const { Document, User } = require('../models');
 
 // Get all documents
@@ -105,6 +107,60 @@ router.delete('/:id', async (req, res) => {
     await Document.deleteOne({ id: req.params.id });
     res.json({ message: 'Document deleted' });
   } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// View document content
+router.get('/view/:id', async (req, res) => {
+  try {
+    const document = await Document.findOne({ id: req.params.id });
+    if (!document) return res.status(404).json({ message: 'Document not found' });
+    
+    // Check if the file path exists
+    if (!document.filePath) {
+      return res.status(404).json({ message: 'Document file path not found' });
+    }
+    
+    // Determine the file path
+    // First check if it's a relative path or absolute path
+    let filePath;
+    if (document.filePath.startsWith('/')) {
+      // This is already a path relative to the server root or an absolute path
+      filePath = path.resolve(__dirname, '../../public', document.filePath.substring(1));
+    } else {
+      // This is a relative path
+      filePath = path.resolve(__dirname, '../../public/documents', document.filePath);
+    }
+    
+    // Check if the file exists
+    if (!fs.existsSync(filePath)) {
+      console.error(`Document file not found at path: ${filePath}`);
+      // Use a sample file instead
+      filePath = path.resolve(__dirname, '../../public/documents/sample-pdf.pdf');
+      
+      // If even the sample doesn't exist, return an error
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: 'Document file not found' });
+      }
+    }
+    
+    // Determine content type
+    let contentType = 'application/octet-stream'; // Default
+    if (filePath.endsWith('.pdf')) contentType = 'application/pdf';
+    else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) contentType = 'image/jpeg';
+    else if (filePath.endsWith('.png')) contentType = 'image/png';
+    else if (filePath.endsWith('.txt')) contentType = 'text/plain';
+    
+    // Set appropriate headers
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${path.basename(filePath)}"`);
+    
+    // Send the file
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+  } catch (err) {
+    console.error('Error viewing document:', err);
     res.status(500).json({ message: err.message });
   }
 });

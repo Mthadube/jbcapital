@@ -16,7 +16,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "setup": "npm install && npm run server:install",
     "start": "node server/server.js",
-    "render-build": "npm install && npm run build && cd server && npm install"
+    "render-build": "npm install && npm run build && cd server && npm install && mkdir -p ../public/documents && mkdir -p ../dist/documents && cp -r ../public/documents ../dist/ || true"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
