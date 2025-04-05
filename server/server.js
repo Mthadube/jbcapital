@@ -3,6 +3,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const connectDB = require('./db');
 const mountRoutes = require('./routes');
 const { User, Document, Loan, Application } = require('./models');
@@ -17,6 +18,10 @@ connectDB();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static files from the React build folder in production
+const clientBuildPath = path.join(__dirname, '../dist');
+app.use(express.static(clientBuildPath));
 
 // Create default admin user if none exists
 const initializeAdminUser = async () => {
@@ -198,10 +203,20 @@ app.post('/api/migrate-data', async (req, res) => {
 
 // Health check route
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'healthy', time: new Date().toISOString() });
+  res.json({ status: 'ok', message: 'Server is running' });
 });
 
-// Start server
+// Handle React routing in production - serve index.html for any unknown routes
+app.get('*', (req, res) => {
+  // Only serve the React app if the request is not an API request
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  } else {
+    res.status(404).json({ message: 'API endpoint not found' });
+  }
+});
+
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
