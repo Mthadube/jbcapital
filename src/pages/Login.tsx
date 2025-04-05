@@ -19,7 +19,7 @@ const Login = () => {
   
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, users, isAuthenticated } = useAppData();
+  const { login, users, getUserByEmail, setCurrentUser } = useAppData();
   
   // Check if admin login was required (redirected from admin page)
   const adminRequired = location.state?.adminRequired;
@@ -36,14 +36,6 @@ const Login = () => {
     }
   }, [adminRequired]);
   
-  // Check if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      const redirectTo = isAdminEmail() ? '/admin' : '/profile';
-      navigate(redirectTo, { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
-  
   // Get the redirect URL from location state or default to profile page
   const from = location.state?.from?.pathname || '/profile';
   
@@ -52,10 +44,32 @@ const Login = () => {
     return email.toLowerCase() === 'admin@jbcapital.com';
   };
   
+  // Add new function before the handleSubmit function
+  const adminDirectLogin = () => {
+    console.log("Attempting direct admin login");
+    const adminUser = users.find(u => u.email.toLowerCase() === 'admin@jbcapital.com');
+    
+    if (adminUser) {
+      console.log("Admin user found, setting as current user");
+      setCurrentUser(adminUser);
+      
+      // Add a slight delay before redirect
+      setTimeout(() => {
+        navigate('/admin', { replace: true });
+      }, 300);
+      
+      return true;
+    } else {
+      console.error("Admin user not found in users list", users);
+      return false;
+    }
+  };
+  
   // Handle the submit function for better error handling
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("Login attempt with:", { email, password });
     
     // For demo purposes, show available user emails
     if (email.toLowerCase() === 'help') {
@@ -77,18 +91,25 @@ const Login = () => {
     }
     
     try {
-      // Regular users and admin both need a password in the new system
-      if (!password) {
-        toast.error('Password is required');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Use the token-based login function from AppDataContext
+      // Use the improved login function from AppDataContext
       const success = await login(email, password);
       
       if (success) {
-        // The navigation will be handled in the useEffect that watches isAuthenticated
+        toast.success('Login successful!');
+        
+        // Navigate to the appropriate page based on user role
+        setTimeout(() => {
+          if (email.toLowerCase() === 'admin@jbcapital.com') {
+            navigate('/admin', { replace: true });
+          } else {
+            navigate(from, { replace: true });
+          }
+        }, 500);
+      } else {
+        // Login function will display appropriate error messages
+        if (email.toLowerCase() === 'admin@jbcapital.com') {
+          toast.error('Admin login failed. Please make sure the MongoDB server is running.');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);

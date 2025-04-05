@@ -86,6 +86,7 @@ MONGODB_DB_NAME="jbcapital"
 - Document upload and verification
 - Admin dashboard with data analytics
 - Persistent data storage with MongoDB
+- Document management system with upload, preview, and verification
 
 ## API Endpoints
 
@@ -95,6 +96,10 @@ MONGODB_DB_NAME="jbcapital"
 - `/api/applications` - Application management
 - `/api/migrate-data` - Data migration utility
 - `/api/health` - API health check
+
+## Document Management
+
+For detailed information about the document management system, see [README-documents.md](README-documents.md).
 
 ## Project info
 

@@ -71,12 +71,13 @@ const addressSuggestions = [
 ];
 
 const PersonalInfoForm: React.FC = () => {
-  const { formData, updateFormData, nextStep } = useFormContext();
+  const { formData, updateFormData, nextStep, goToStep } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [addressSearchOpen, setAddressSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   
   const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
@@ -102,7 +103,20 @@ const PersonalInfoForm: React.FC = () => {
       return;
     }
     
-    updateFormData({
+    // Check if address fields are filled
+    if (!data.address) {
+      toast.error("Please enter your street address");
+      return;
+    }
+    
+    // Check if terms are accepted
+    if (!termsAccepted) {
+      toast.error("Please accept the terms and conditions");
+      return;
+    }
+    
+    // Prepare the form data
+    const formDataToUpdate = {
       firstName: data.firstName,
       lastName: data.lastName,
       idNumber: data.idNumber,
@@ -111,13 +125,16 @@ const PersonalInfoForm: React.FC = () => {
       password: data.password,
       confirmPassword: data.confirmPassword,
       address: data.address,
-      suburb: data.suburb,
-      city: data.city,
-      state: data.province,
-      zipCode: data.postalCode,
-    });
+      suburb: data.suburb || '',
+      city: data.city || '',
+      state: data.province || '',
+      zipCode: data.postalCode || '',
+    };
     
-    toast.success("Personal information saved!");
+    // Update the form context data
+    updateFormData(formDataToUpdate);
+    
+    // Move to next step
     nextStep();
   };
   
@@ -326,14 +343,106 @@ const PersonalInfoForm: React.FC = () => {
       </div>
       
       <div className="flex items-center space-x-2 mt-4">
-        <input type="checkbox" id="terms" className="rounded border-gray-300 text-primary focus:ring-primary" />
+        <input 
+          type="checkbox" 
+          id="terms" 
+          checked={termsAccepted}
+          onChange={(e) => setTermsAccepted(e.target.checked)}
+          className="rounded border-gray-300 text-primary focus:ring-primary" 
+        />
         <label htmlFor="terms" className="text-sm">
           I accept the <a href="#" className="text-primary hover:underline">terms and conditions</a>
         </label>
       </div>
       
       <div className="flex justify-end mt-8">
-        <button type="submit" className="btn-primary min-w-[150px]">
+        <button 
+          type="button" 
+          onClick={() => {
+            const formValues = watch();
+            
+            // Manually perform validation
+            if (!formValues.firstName || formValues.firstName.length < 2) {
+              toast.error("First name must be at least 2 characters");
+              return;
+            }
+            
+            if (!formValues.lastName || formValues.lastName.length < 2) {
+              toast.error("Last name must be at least 2 characters");
+              return;
+            }
+            
+            if (!formValues.email || !formValues.email.includes('@')) {
+              toast.error("Please enter a valid email address");
+              return;
+            }
+            
+            if (!formValues.phoneNumber || !/^0\d{9}$/.test(formValues.phoneNumber)) {
+              toast.error("Please enter a valid 10-digit phone number starting with 0");
+              return;
+            }
+            
+            if (!formValues.password || formValues.password.length < 8) {
+              toast.error("Password must be at least 8 characters");
+              return;
+            }
+            
+            if (formValues.password !== formValues.confirmPassword) {
+              toast.error("Passwords do not match");
+              return;
+            }
+            
+            if (!formValues.address || formValues.address.length < 5) {
+              toast.error("Please enter your street address");
+              return;
+            }
+            
+            if (!formValues.city || formValues.city.length < 2) {
+              toast.error("City must be at least 2 characters");
+              return;
+            }
+            
+            if (!formValues.province || formValues.province.length < 2) {
+              toast.error("Please select a province");
+              return;
+            }
+            
+            if (!formValues.postalCode || !/^\d{4}$/.test(formValues.postalCode)) {
+              toast.error("Please enter a valid 4-digit postal code");
+              return;
+            }
+            
+            if (!termsAccepted) {
+              toast.error("Please accept the terms and conditions");
+              return;
+            }
+            
+            // If all validations pass, prepare and update form data
+            const formDataToUpdate = {
+              firstName: formValues.firstName,
+              lastName: formValues.lastName,
+              idNumber: formValues.idNumber,
+              phone: formValues.phoneNumber,
+              email: formValues.email,
+              password: formValues.password,
+              confirmPassword: formValues.confirmPassword,
+              address: formValues.address,
+              suburb: formValues.suburb || '',
+              city: formValues.city || '',
+              state: formValues.province || '',
+              zipCode: formValues.postalCode || '',
+            };
+            
+            updateFormData(formDataToUpdate);
+            nextStep();
+            
+            // For extra reliability, try again with goToStep if needed
+            setTimeout(() => {
+              goToStep(2); 
+            }, 100);
+          }}
+          className="btn-primary min-w-[150px]"
+        >
           Continue
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppData } from './AppDataContext';
 import { toast } from 'sonner';
@@ -9,50 +9,44 @@ import { toast } from 'sonner';
  * @returns boolean indicating if user is authenticated (and is admin if requireAdmin is true)
  */
 export const useRequireAuth = (requireAdmin = false) => {
-  const { currentUser, isAuthenticated, logout, checkAuth } = useAppData();
-  const [isChecking, setIsChecking] = useState(true);
+  const { currentUser, logout } = useAppData();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    const verifyAuth = async () => {
-      setIsChecking(true);
-      // Verify token on route change
-      const isValid = await checkAuth();
+    // If no user is logged in
+    if (!currentUser) {
+      toast.error('Authentication required', {
+        description: requireAdmin ? 'Admin login required to access this page' : 'Please log in to access this page',
+        duration: 5000
+      });
       
-      if (!isValid) {
-        toast.error('Authentication required', {
-          description: requireAdmin ? 'Admin login required to access this page' : 'Please log in to access this page',
-          duration: 5000
-        });
-        
-        navigate('/login', { 
-          state: { from: location, adminRequired: requireAdmin },
-          replace: true 
-        });
-      } else if (requireAdmin && (!currentUser || currentUser.role !== 'admin')) {
-        toast.error('Access denied', { 
-          description: 'You need admin privileges to access this page. Please log in with an admin account.',
-          duration: 5000
-        });
-        
-        // Log out current user and redirect to admin login
-        logout();
-        navigate('/login', { 
-          state: { adminRequired: true },
-          replace: true 
-        });
-      }
+      navigate('/login', { 
+        state: { from: location, adminRequired: requireAdmin },
+        replace: true 
+      });
+      return;
+    }
+
+    // If admin is required but user is not admin
+    if (requireAdmin && currentUser.role !== 'admin') {
+      toast.error('Access denied', { 
+        description: 'You need admin privileges to access this page. Please log in with an admin account.',
+        duration: 5000
+      });
       
-      setIsChecking(false);
-    };
-    
-    verifyAuth();
-  }, [currentUser, navigate, location, requireAdmin, logout, checkAuth]);
+      // Log out current user and redirect to admin login
+      logout();
+      navigate('/login', { 
+        state: { adminRequired: true },
+        replace: true 
+      });
+      return;
+    }
+  }, [currentUser, navigate, location, requireAdmin, logout]);
 
   // Return whether the user is authenticated and has required permissions
-  if (isChecking) return false;
-  if (!isAuthenticated) return false;
-  if (requireAdmin) return currentUser?.role === 'admin';
+  if (!currentUser) return false;
+  if (requireAdmin) return currentUser.role === 'admin';
   return true;
 }; 

@@ -51,7 +51,7 @@ const NotificationCenter: React.FC = () => {
   
   // Get notification icon based on type
   const getNotificationIcon = (type: string) => {
-    switch (type) {
+  switch (type) {
       case "application":
         return <FileText className="h-5 w-5 text-blue-500" />;
       case "document":
@@ -62,7 +62,7 @@ const NotificationCenter: React.FC = () => {
         return <User className="h-5 w-5 text-purple-500" />;
       case "system":
         return <PieChart className="h-5 w-5 text-gray-500" />;
-      case "warning":
+    case "warning":
         return <AlertCircle className="h-5 w-5 text-red-500" />;
       default:
         return <MessageSquare className="h-5 w-5 text-primary" />;
@@ -78,7 +78,7 @@ const NotificationCenter: React.FC = () => {
         return <Badge variant="default">Medium</Badge>;
       case "low":
         return <Badge variant="outline">Low</Badge>;
-      default:
+    default:
         return <Badge variant="outline">Normal</Badge>;
     }
   };
@@ -221,8 +221,8 @@ const NotificationCenter: React.FC = () => {
               <AlertCircle className="h-4 w-4 mr-2" />
               High Priority
             </TabsTrigger>
-          </TabsList>
-          
+            </TabsList>
+            
           <Button variant="ghost" size="icon" onClick={() => setActiveTab("settings")}>
             <Settings className="h-5 w-5" />
           </Button>
@@ -230,7 +230,7 @@ const NotificationCenter: React.FC = () => {
         
         <TabsContent value="all" className="space-y-4">
           <Card>
-            <CardContent className="p-4">
+                    <CardContent className="p-4">
               {filteredNotifications.length > 0 ? (
                 <div className="space-y-4 max-h-[500px] overflow-y-auto">
                   {filteredNotifications.map((notification) => (
@@ -244,7 +244,7 @@ const NotificationCenter: React.FC = () => {
                     >
                       <div className="rounded-full p-2 bg-background">
                         {getNotificationIcon(notification.type)}
-                      </div>
+                          </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <h4 className="font-medium leading-none">{notification.title}</h4>
@@ -288,13 +288,13 @@ const NotificationCenter: React.FC = () => {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
+                    </CardContent>
+                  </Card>
+            </TabsContent>
+            
         <TabsContent value="unread" className="space-y-4">
           <Card>
-            <CardContent className="p-4">
+                    <CardContent className="p-4">
               {filteredNotifications.length > 0 ? (
                 <div className="space-y-4 max-h-[500px] overflow-y-auto">
                   {filteredNotifications.map((notification) => (
@@ -399,8 +399,8 @@ const NotificationCenter: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
+                ))}
+              </div>
               ) : (
                 <div className="py-12 text-center">
                   <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
@@ -410,23 +410,23 @@ const NotificationCenter: React.FC = () => {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+        </CardContent>
+      </Card>
         </TabsContent>
-        
+      
         <TabsContent value="settings" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Settings</CardTitle>
+      <Card>
+        <CardHeader>
+          <CardTitle>Notification Settings</CardTitle>
               <CardDescription>
                 Configure how you want to receive notifications
               </CardDescription>
-            </CardHeader>
+        </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <h3 className="font-medium">Notification Channels</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+          <div className="space-y-4">
+                    <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Sound Notifications</Label>
                       <p className="text-sm text-muted-foreground">
@@ -439,7 +439,7 @@ const NotificationCenter: React.FC = () => {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Browser Notifications</Label>
                       <p className="text-sm text-muted-foreground">
@@ -452,7 +452,7 @@ const NotificationCenter: React.FC = () => {
                     />
                   </div>
                   
-                  <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label className="text-base">Email Notifications</Label>
                       <p className="text-sm text-muted-foreground">
@@ -479,7 +479,7 @@ const NotificationCenter: React.FC = () => {
                         {Math.round(notificationSettings.soundVolume * 100)}%
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2">
                       <VolumeX className="h-4 w-4 text-muted-foreground" />
                       <Slider
                         id="volume"
@@ -492,8 +492,8 @@ const NotificationCenter: React.FC = () => {
                       />
                       <Volume2 className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  </div>
-                  
+            </div>
+            
                   <Button 
                     variant="outline" 
                     onClick={createTestNotification}
@@ -501,10 +501,10 @@ const NotificationCenter: React.FC = () => {
                   >
                     Test Notification Sound
                   </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
         </TabsContent>
       </Tabs>
     </div>

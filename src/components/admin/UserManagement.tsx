@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { 
   Search, Plus, Edit, Trash, Lock, MoreHorizontal, 
-  Shield, Check, X, Clock, FileCheck, Eye, User
+  Shield, Check, X, Clock, FileCheck, Eye, User,
+  Wallet, FileText, Building, CreditCard, Phone, Mail, Home
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
@@ -15,6 +16,11 @@ import UserProfileView from "./UserProfileView";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerClose, DrawerFooter } from "@/components/ui/drawer";
 import { useNavigate } from "react-router-dom";
 import { useAppData } from "@/utils/AppDataContext";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import DocumentViewer from "@/components/DocumentViewer";
+import { calculateProfileCompletion } from "@/utils/profileUtils";
 
 // Define role types for better type safety
 interface Role {
@@ -156,6 +162,10 @@ const UserManagement = () => {
   };
 
   const handleEditUserProfile = (section: string) => {
+    if (!selectedUserForProfile) {
+      toast.error("No user selected");
+      return;
+    }
     toast.info(`Editing ${section} for ${selectedUserForProfile.firstName} ${selectedUserForProfile.lastName}`);
     // In a real app, this would open a form to edit the specific section
   };
@@ -163,6 +173,62 @@ const UserManagement = () => {
   // Function to navigate to detailed user profile
   const handleViewDetailedProfile = (user: any) => {
     navigate(`/admin/user/${user.id}`);
+  };
+
+  // Calculate profile completion percentage
+  const getUserProfileCompletion = (user: any) => {
+    if (!user) return 0;
+    
+    // If the user already has a calculated percentage, use it
+    if (user.profileCompletionPercentage) {
+      return user.profileCompletionPercentage;
+    }
+    // Otherwise calculate it
+    return calculateProfileCompletion(user);
+  };
+
+  // Helper to safely calculate profile completion
+  const calculateProfileCompletion = (user: any) => {
+    if (!user) return 0;
+    
+    // Define fields that should be completed for 100% profile
+    const requiredFields = [
+      'firstName', 'lastName', 'email', 'phone', 'address',
+      'dateOfBirth', 'idNumber'
+    ];
+    
+    // Count completed fields
+    const completedFields = requiredFields.filter(field => 
+      user[field] && user[field].toString().trim() !== ''
+    ).length;
+    
+    // Calculate percentage
+    return Math.round((completedFields / requiredFields.length) * 100);
+  };
+
+  // Get document count by status - with null check
+  const getDocumentCountByStatus = (user: any, status: 'verified' | 'pending' | 'rejected') => {
+    if (!user || !user.documents || !Array.isArray(user.documents)) return 0;
+    
+    return user.documents.filter(doc => doc.verificationStatus === status).length;
+  };
+
+  // Get total documents count - with null check
+  const getTotalDocumentsCount = (user: any) => {
+    if (!user || !user.documents || !Array.isArray(user.documents)) return 0;
+    return user.documents.length;
+  };
+
+  // Get loans count by status - with null check
+  const getLoansCountByStatus = (user: any, status: string) => {
+    if (!user || !user.loans || !Array.isArray(user.loans)) return 0;
+    return user.loans.filter(loan => loan.status === status).length;
+  };
+
+  // Get total loans count - with null check
+  const getTotalLoansCount = (user: any) => {
+    if (!user || !user.loans || !Array.isArray(user.loans)) return 0;
+    return user.loans.length;
   };
 
   return (
@@ -410,39 +476,384 @@ const UserManagement = () => {
 
       {/* User Profile Drawer */}
       <Drawer open={showUserProfileDrawer} onOpenChange={setShowUserProfileDrawer}>
-        <DrawerContent className="max-h-[90vh] overflow-y-auto">
+        <DrawerContent className="max-h-[90vh] flex flex-col">
           <DrawerHeader className="border-b pb-4">
-            <DrawerTitle className="text-2xl font-bold">User Profile</DrawerTitle>
+            <DrawerTitle className="flex items-center">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                <User className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                {selectedUserForProfile && 
+                  `${selectedUserForProfile.firstName} ${selectedUserForProfile.lastName}`}
+              </div>
+            </DrawerTitle>
             <DrawerDescription>
-              {selectedUserForProfile ? `Viewing complete details for ${selectedUserForProfile.firstName} ${selectedUserForProfile.lastName}` : "Loading user details..."}
+              {selectedUserForProfile && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge 
+                    variant={selectedUserForProfile.accountStatus === "active" ? "default" : "secondary"}
+                    className="mr-2"
+                  >
+                    {selectedUserForProfile.accountStatus || "Active"}
+                  </Badge>
+                  
+                  <span className="text-sm">
+                    {selectedUserForProfile.email}
+                  </span>
+                </div>
+              )}
             </DrawerDescription>
           </DrawerHeader>
           
-          <div className="p-6">
-            {selectedUserForProfile && (
-              <UserProfileView 
-                user={selectedUserForProfile} 
-                onEditClick={handleEditUserProfile} 
-              />
-            )}
+          <div className="px-4 border-b py-3 bg-muted/30">
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-lg font-medium">
+                  {selectedUserForProfile && getUserProfileCompletion(selectedUserForProfile)}%
+                </p>
+                <p className="text-sm text-muted-foreground">Profile Completion</p>
+              </div>
+              <div>
+                <p className="text-lg font-medium">
+                  {selectedUserForProfile && getTotalDocumentsCount(selectedUserForProfile)}
+                </p>
+                <p className="text-sm text-muted-foreground">Documents</p>
+              </div>
+              <div>
+                <p className="text-lg font-medium">
+                  {selectedUserForProfile && getTotalLoansCount(selectedUserForProfile)}
+                </p>
+                <p className="text-sm text-muted-foreground">Loans</p>
+              </div>
+            </div>
           </div>
           
-          <DrawerFooter className="border-t pt-4">
+          <div className="p-4 overflow-auto flex-1">
+            <Tabs defaultValue="overview">
+              <TabsList className="w-full grid grid-cols-4 mb-4">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="loans">Loans</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="overview" className="space-y-4">
+                {/* Personal Information */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center">
+                        <User className="h-4 w-4 mr-2 text-primary" />
+                        Personal Information
+                      </CardTitle>
+                      <Button variant="ghost" size="sm" onClick={() => handleEditUserProfile('personalInfo')}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="py-3">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">First Name</p>
+                        <p>{selectedUserForProfile?.firstName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Last Name</p>
+                        <p>{selectedUserForProfile?.lastName}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">ID Number</p>
+                        <p>{selectedUserForProfile?.idNumber || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>
+                        <p>{selectedUserForProfile?.dateOfBirth || "Not provided"}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Contact Information */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center">
+                        <Phone className="h-4 w-4 mr-2 text-primary" />
+                        Contact Information
+                      </CardTitle>
+                      <Button variant="ghost" size="sm" onClick={() => handleEditUserProfile('contactInfo')}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="py-3">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Email</p>
+                        <p>{selectedUserForProfile?.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                        <p>{selectedUserForProfile?.phone || "Not provided"}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-sm font-medium text-muted-foreground">Address</p>
+                        <p>
+                          {selectedUserForProfile?.address ? 
+                            `${selectedUserForProfile.address}, ${selectedUserForProfile.city || ''}, ${selectedUserForProfile.state || ''}, ${selectedUserForProfile.zipCode || ''}` : 
+                            "Not provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Financial Information */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center">
+                        <CreditCard className="h-4 w-4 mr-2 text-primary" />
+                        Financial Information
+                      </CardTitle>
+                      <Button variant="ghost" size="sm" onClick={() => handleEditUserProfile('financialInfo')}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="py-3">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Monthly Income</p>
+                        <p>R {selectedUserForProfile?.monthlyIncome?.toLocaleString() || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Employment Status</p>
+                        <p className="capitalize">{selectedUserForProfile?.employmentStatus || "Not provided"}</p>
+                      </div>
+                      {selectedUserForProfile?.monthlyExpenses && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Monthly Expenses</p>
+                          <p>R {selectedUserForProfile.monthlyExpenses?.toLocaleString()}</p>
+                        </div>
+                      )}
+                      {selectedUserForProfile?.creditScore && (
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Credit Score</p>
+                          <p>{selectedUserForProfile.creditScore}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Account Status */}
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-base flex items-center">
+                      <Shield className="h-4 w-4 mr-2 text-primary" />
+                      Account Status
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="py-3">
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium">Profile Completion</p>
+                          <p className="text-sm">{getUserProfileCompletion(selectedUserForProfile)}%</p>
+                        </div>
+                        <Progress value={getUserProfileCompletion(selectedUserForProfile)} className="h-2" />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Documents Status</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">
+                              {getDocumentCountByStatus(selectedUserForProfile, 'verified')} Verified
+                            </Badge>
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">
+                              {getDocumentCountByStatus(selectedUserForProfile, 'pending')} Pending
+                            </Badge>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground">Loans</p>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+                              {getLoansCountByStatus(selectedUserForProfile, 'active')} Active
+                            </Badge>
+                            <Badge variant="outline" className="bg-gray-50 text-gray-700 hover:bg-gray-50">
+                              {getLoansCountByStatus(selectedUserForProfile, 'completed')} Completed
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="documents" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>User Documents</CardTitle>
+                    <CardDescription>View and manage documents uploaded by this user</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedUserForProfile?.documents && selectedUserForProfile.documents.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-4">
+                        {selectedUserForProfile.documents.map((doc, index) => (
+                          <DocumentViewer 
+                            key={doc.id || index} 
+                            document={doc} 
+                            onDownload={(document) => {
+                              toast.success(`Downloading document: ${document.name}`);
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <FileText className="h-10 w-10 mx-auto mb-4 text-muted-foreground/50" />
+                        <p>No documents uploaded by this user</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="loans" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>User Loans</CardTitle>
+                    <CardDescription>View and manage loan applications for this user</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedUserForProfile?.loans && selectedUserForProfile.loans.length > 0 ? (
+                      <div className="space-y-4">
+                        {selectedUserForProfile.loans.map((loan, index) => (
+                          <Card key={loan.id || index} className="border">
+                            <CardHeader className="py-3">
+                              <div className="flex justify-between items-center">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={
+                                    loan.status === "active" ? "default" :
+                                    loan.status === "completed" ? "outline" :
+                                    loan.status === "defaulted" ? "destructive" : "secondary"
+                                  }>
+                                    {loan.status}
+                                  </Badge>
+                                  <span className="font-medium">{loan.id}</span>
+                                </div>
+                                <span className="text-sm text-muted-foreground">
+                                  {loan.dateApplied ? new Date(loan.dateApplied).toLocaleDateString() : "No date"}
+                                </span>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="py-3">
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Amount</p>
+                                  <p>R {loan.amount?.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Term</p>
+                                  <p>{loan.term} months</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Monthly Payment</p>
+                                  <p>R {loan.monthlyPayment?.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Interest Rate</p>
+                                  <p>{loan.interestRate}%</p>
+                                </div>
+                              </div>
+                              {loan.status === "active" && (
+                                <div className="mt-3">
+                                  <div className="flex justify-between text-sm mb-1">
+                                    <span>Repayment Progress</span>
+                                    <span>
+                                      {loan.paidMonths || 0} of {loan.term} months
+                                    </span>
+                                  </div>
+                                  <Progress 
+                                    value={((loan.paidMonths || 0) / loan.term) * 100} 
+                                    className="h-2"
+                                  />
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Wallet className="h-10 w-10 mx-auto mb-4 text-muted-foreground/50" />
+                        <p>No loans for this user</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="activity" className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>View recent account activity and changes</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedUserForProfile?.lastLogin ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center border-b pb-2">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                            <User className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Last Login</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(selectedUserForProfile.lastLogin).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center border-b pb-2">
+                          <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                            <FileCheck className="h-4 w-4 text-green-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Account Created</p>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(selectedUserForProfile.registrationDate).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Clock className="h-10 w-10 mx-auto mb-4 text-muted-foreground/50" />
+                        <p>No activity records available</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+          
+          <DrawerFooter className="border-t">
             <div className="flex justify-between w-full">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowUserProfileDrawer(false)}
-              >
+              <Button variant="outline" onClick={() => setShowUserProfileDrawer(false)}>
                 Close
               </Button>
-              
-              {selectedUserForProfile && (
-                <Button 
-                  onClick={() => handleViewDetailedProfile(selectedUserForProfile)}
-                >
+              <Button onClick={() => handleViewDetailedProfile(selectedUserForProfile)}>
                   View Full Profile
                 </Button>
-              )}
             </div>
           </DrawerFooter>
         </DrawerContent>

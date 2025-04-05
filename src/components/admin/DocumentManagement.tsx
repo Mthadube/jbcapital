@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { 
   Search, Filter, FileText, CheckCircle, 
   XCircle, Download, Eye, UploadCloud, FileWarning, MoreHorizontal, UserCircle,
-  RefreshCw
+  RefreshCw, Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useAppData, Document } from "@/utils/AppDataContext";
+import DocumentViewer from "@/components/DocumentViewer";
+import DocumentPreview from "@/components/DocumentPreview";
+import { getDocumentTypeDisplayName } from "@/utils/profileUtils";
 
 // Extending the Document interface to ensure compatability with the component
 interface DocumentInfo extends Document {}
@@ -105,10 +108,38 @@ const DocumentManagement = () => {
     setShowVerifyDialog(true);
   };
 
-  // View document details
+  // View document details with enhanced preview
   const handleViewDocument = (document: DocumentInfo) => {
     setSelectedDocument(document);
     setShowDocumentDialog(true);
+  };
+
+  // Download document
+  const handleDownloadDocument = (document: DocumentInfo) => {
+    if (document.filePath) {
+      try {
+        const filePath = document.filePath.startsWith('/') 
+          ? document.filePath 
+          : `/${document.filePath}`;
+          
+        console.log("Downloading document:", filePath);
+        
+        // Create an anchor element and trigger the download
+        const a = window.document.createElement('a');
+        a.href = filePath;
+        a.download = document.name;
+        window.document.body.appendChild(a);
+        a.click();
+        window.document.body.removeChild(a);
+        
+        toast.success(`Downloading ${document.name}`);
+      } catch (error) {
+        console.error("Download error:", error);
+        toast.error("Failed to download document. Please try again.");
+      }
+    } else {
+      toast.error("Document doesn't have a file path specified.");
+    }
   };
 
   // Submit verification/rejection
@@ -141,12 +172,6 @@ const DocumentManagement = () => {
   const getDocumentUserName = (userId: string) => {
     const user = users.find(u => u.id === userId);
     return user ? `${user.firstName} ${user.lastName}` : "Unknown User";
-  };
-
-  // Simulating download functionality
-  const handleDownloadDocument = (document: DocumentInfo) => {
-    toast.success(`Downloading ${document.name}`);
-    // In a real app, this would trigger a file download
   };
 
   return (
@@ -235,6 +260,16 @@ const DocumentManagement = () => {
         </div>
       </div>
 
+      <Tabs defaultValue="all">
+        <TabsList className="grid grid-cols-4 mb-4">
+          <TabsTrigger value="all">All Documents</TabsTrigger>
+          <TabsTrigger value="pending">Pending Verification</TabsTrigger>
+          <TabsTrigger value="verified">Verified Documents</TabsTrigger>
+          <TabsTrigger value="rejected">Rejected Documents</TabsTrigger>
+        </TabsList>
+        
+        {/* All Documents Tab */}
+        <TabsContent value="all">
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>All Documents</CardTitle>
@@ -246,97 +281,91 @@ const DocumentManagement = () => {
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-[100px]">Document ID</TableHead>
-                  <TableHead>Document Name</TableHead>
+                      <TableHead>Document Type</TableHead>
                   <TableHead>Submitted By</TableHead>
-                  <TableHead>Date Uploaded</TableHead>
-                  <TableHead>Type</TableHead>
+                      <TableHead>Upload Date</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      <div className="flex justify-center items-center">
-                        <RefreshCw className="animate-spin h-5 w-5 mr-2" />
-                        Loading documents...
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ) : isError ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-red-500">
-                      Error loading documents. Please try refreshing.
-                    </TableCell>
-                  </TableRow>
-                ) : filteredDocuments.length > 0 ? (
+                    {filteredDocuments.length > 0 ? (
                   filteredDocuments.map((doc) => (
                     <TableRow key={doc.id}>
                       <TableCell className="font-mono text-xs">{doc.id}</TableCell>
-                      <TableCell className="font-medium">{doc.name}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {doc.type === 'id' && <FileText className="h-4 w-4 text-red-500" />}
+                              {doc.type === 'proof_of_residence' && <FileText className="h-4 w-4 text-blue-500" />}
+                              {doc.type === 'bank_statement' && <FileText className="h-4 w-4 text-green-500" />}
+                              {doc.type === 'payslip' && <FileText className="h-4 w-4 text-amber-500" />}
+                              {!['id', 'proof_of_residence', 'bank_statement', 'payslip'].includes(doc.type) && 
+                                <FileText className="h-4 w-4 text-gray-500" />}
+                              {getDocumentTypeDisplayName(doc.type)}
+                            </div>
+                          </TableCell>
                       <TableCell>
-                        <div className="flex items-center">
-                          <UserCircle className="mr-1 h-4 w-4 text-muted-foreground" />
+                            <div className="flex items-center gap-2">
+                              <UserCircle className="h-4 w-4 text-primary" />
                           {getDocumentUserName(doc.userId)}
                         </div>
                       </TableCell>
-                      <TableCell>{doc.dateUploaded}</TableCell>
+                          <TableCell>{new Date(doc.dateUploaded).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          <FileText className="mr-1 h-3 w-3" />
-                          {doc.type.replace(/_/g, " ")}
+                            {doc.verificationStatus === 'verified' && (
+                              <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
+                                <CheckCircle className="h-3 w-3 mr-1 text-green-600" />
+                                Verified
+                              </Badge>
+                            )}
+                            {doc.verificationStatus === 'pending' && (
+                              <Badge variant="outline" className="bg-amber-50 text-amber-800 hover:bg-amber-50">
+                                <Clock className="h-3 w-3 mr-1 text-amber-500" />
+                                Pending
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={
-                            doc.verificationStatus === "verified" ? "default" :
-                            doc.verificationStatus === "rejected" ? "destructive" : 
-                            "outline"
-                          }
-                        >
-                          {doc.verificationStatus === "verified" ? (
-                            <CheckCircle className="mr-1 h-3 w-3" />
-                          ) : doc.verificationStatus === "rejected" ? (
-                            <XCircle className="mr-1 h-3 w-3" />
-                          ) : (
-                            <FileWarning className="mr-1 h-3 w-3" />
-                          )}
-                          {doc.verificationStatus}
+                            )}
+                            {doc.verificationStatus === 'rejected' && (
+                              <Badge variant="outline" className="bg-red-50 text-red-800 hover:bg-red-50">
+                                <XCircle className="h-3 w-3 mr-1 text-red-500" />
+                                Rejected
                         </Badge>
+                            )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end space-x-1">
                           <Button
-                            variant="ghost"
-                            size="icon"
+                                variant="outline" 
+                                size="sm"
                             onClick={() => handleViewDocument(doc)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon"
+                                variant="outline" 
+                                size="sm"
                             onClick={() => handleDownloadDocument(doc)}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                                  <Button variant="outline" size="sm">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                                  {doc.verificationStatus !== 'verified' && (
                               <DropdownMenuItem onClick={() => handleVerifyDocument(doc)}>
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Verify
+                                      <CheckCircle className="h-4 w-4 mr-2 text-green-500" />
+                                      Verify Document
                               </DropdownMenuItem>
+                                  )}
+                                  {doc.verificationStatus !== 'rejected' && (
                               <DropdownMenuItem onClick={() => handleRejectDocument(doc)}>
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Reject
+                                      <XCircle className="h-4 w-4 mr-2 text-red-500" />
+                                      Reject Document
                               </DropdownMenuItem>
+                                  )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
@@ -345,8 +374,8 @@ const DocumentManagement = () => {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      No documents found.
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No documents found
                     </TableCell>
                   </TableRow>
                 )}
@@ -355,159 +384,107 @@ const DocumentManagement = () => {
           </div>
         </CardContent>
       </Card>
-
-      {/* Document View Dialog */}
-      <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Document Details</DialogTitle>
-            <DialogDescription>
-              View and manage document information
-            </DialogDescription>
-          </DialogHeader>
-          
-          {selectedDocument && (
-            <div className="space-y-4">
-              <div className="rounded-lg border p-4 bg-muted/30">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{selectedDocument.name}</h3>
-                    <p className="text-sm text-muted-foreground">Submitted by {getDocumentUserName(selectedDocument.userId)}</p>
-                  </div>
-                  <Badge 
-                    variant={
-                      selectedDocument.verificationStatus === "verified" ? "default" :
-                      selectedDocument.verificationStatus === "rejected" ? "destructive" : 
-                      "outline"
-                    }
-                  >
-                    {selectedDocument.verificationStatus}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium">Document ID</p>
-                  <p className="text-sm font-mono">{selectedDocument.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Date Uploaded</p>
-                  <p className="text-sm">{selectedDocument.dateUploaded}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Document Type</p>
-                  <p className="text-sm">{selectedDocument.type.replace(/_/g, " ")}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">File Info</p>
-                  <p className="text-sm">{selectedDocument.fileType}, {selectedDocument.fileSize || 'Unknown size'}</p>
-                </div>
-              </div>
-              
-              {selectedDocument.notes && (
-                <div>
-                  <p className="text-sm font-medium">Notes</p>
-                  <p className="text-sm mt-1 p-2 border rounded-md">{selectedDocument.notes}</p>
-                </div>
-              )}
-              
-              <div className="border rounded-lg p-6 flex justify-center items-center h-64 bg-muted/50">
-                <div className="text-center">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <p className="mt-2 font-medium">Document Preview</p>
-                  <p className="text-sm text-muted-foreground">Preview unavailable</p>
-                  <Button variant="outline" size="sm" className="mt-4" onClick={() => handleDownloadDocument(selectedDocument)}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Document
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter className="flex items-center justify-between">
-            <div className="flex space-x-2">
-              {selectedDocument?.verificationStatus !== "verified" && (
+        </TabsContent>
+        
+        {/* Pending Verification Tab */}
+        <TabsContent value="pending">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle>Pending Documents</CardTitle>
+              <CardDescription>Documents awaiting verification</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredDocuments
+                  .filter(doc => doc.verificationStatus === 'pending')
+                  .map(doc => (
+                    <div key={doc.id} className="rounded-lg border overflow-hidden">
+                      <DocumentViewer 
+                        document={doc} 
+                        onView={() => handleViewDocument(doc)}
+                        onDownload={() => handleDownloadDocument(doc)}
+                      />
+                      <div className="p-3 bg-amber-50 border-t flex justify-between items-center">
+                        <span className="text-sm text-amber-800 font-medium">Awaiting Verification</span>
+                        <div className="flex gap-2">
                 <Button 
+                            variant="outline" 
                   size="sm" 
-                  variant="outline" 
-                  className="flex items-center text-green-600" 
-                  onClick={() => {
-                    setShowDocumentDialog(false);
-                    handleVerifyDocument(selectedDocument!);
-                  }}
-                >
-                  <CheckCircle className="mr-1 h-4 w-4" />
+                            className="h-8 border-green-500 text-green-600 hover:bg-green-50"
+                            onClick={() => handleVerifyDocument(doc)}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
                   Verify
                 </Button>
-              )}
-              {selectedDocument?.verificationStatus !== "rejected" && (
                 <Button 
+                            variant="outline" 
                   size="sm" 
-                  variant="outline" 
-                  className="flex items-center text-red-600" 
-                  onClick={() => {
-                    setShowDocumentDialog(false);
-                    handleRejectDocument(selectedDocument!);
-                  }}
-                >
-                  <XCircle className="mr-1 h-4 w-4" />
+                            className="h-8 border-red-500 text-red-600 hover:bg-red-50"
+                            onClick={() => handleRejectDocument(doc)}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
                   Reject
                 </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                {filteredDocuments.filter(doc => doc.verificationStatus === 'pending').length === 0 && (
+                  <div className="col-span-full text-center py-12">
+                    <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-1">All caught up!</h3>
+                    <p className="text-gray-500">No documents awaiting verification.</p>
+                  </div>
               )}
             </div>
-            <Button variant="outline" onClick={() => setShowDocumentDialog(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Verify/Reject Dialog */}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        {/* Document Verification Dialog */}
       <Dialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
-        <DialogContent>
+          <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
               {verificationStatus === "verified" ? "Verify Document" : "Reject Document"}
             </DialogTitle>
             <DialogDescription>
               {verificationStatus === "verified"
-                ? "Confirm that this document meets all requirements."
+                  ? "Confirm document verification and add optional notes." 
                 : "Provide a reason for rejecting this document."}
             </DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-4">
+            <div className="space-y-4 py-2">
             {selectedDocument && (
-              <div className="flex items-center space-x-4 p-2 border rounded-md">
-                <FileText className="h-8 w-8 text-blue-500" />
+                <div className="flex items-center space-x-3 border p-3 rounded-md bg-muted/50">
+                  <FileText className="h-8 w-8 text-primary" />
                 <div>
                   <p className="font-medium">{selectedDocument.name}</p>
-                  <p className="text-sm text-muted-foreground">Submitted by {getDocumentUserName(selectedDocument.userId)}</p>
-                </div>
+                    <p className="text-sm text-muted-foreground">
+                      Uploaded by {getDocumentUserName(selectedDocument.userId)} on {' '}
+                      {new Date(selectedDocument.dateUploaded).toLocaleDateString()}
+                    </p>
+                  </div>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="notes">
-                {verificationStatus === "verified" ? "Verification Notes (Optional)" : "Rejection Reason (Required)"}
+                <Label htmlFor="verification-notes">
+                  {verificationStatus === "verified" ? "Verification Notes (Optional)" : "Rejection Reason"}
               </Label>
               <Textarea
-                id="notes"
-                placeholder={
-                  verificationStatus === "verified"
-                    ? "Add any notes about this verification..."
-                    : "Explain why this document is being rejected..."
-                }
+                  id="verification-notes" 
+                  placeholder={verificationStatus === "verified" 
+                    ? "Add any notes about the document verification..." 
+                    : "Please explain why this document is being rejected..."}
                 value={verificationNotes}
                 onChange={(e) => setVerificationNotes(e.target.value)}
-                rows={3}
+                  className="min-h-[100px]"
+                  required={verificationStatus === "rejected"}
               />
             </div>
           </div>
-
-          <DialogFooter>
+            <DialogFooter className="flex space-x-2 sm:justify-end">
             <Button
               variant="outline"
               onClick={() => setShowVerifyDialog(false)}
@@ -516,25 +493,109 @@ const DocumentManagement = () => {
               Cancel
             </Button>
             <Button
-              variant={verificationStatus === "verified" ? "default" : "destructive"}
               onClick={handleSubmitVerification}
-              disabled={
-                (verificationStatus === "rejected" && !verificationNotes.trim()) || 
-                updating
-              }
+                disabled={updating || (verificationStatus === "rejected" && !verificationNotes.trim())}
+                className={verificationStatus === "verified" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"}
             >
               {updating ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
+                    {verificationStatus === "verified" ? "Verifying..." : "Rejecting..."}
+                  </>
+                ) : (
+                  <>
+                    {verificationStatus === "verified" ? (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Verify Document
                 </>
               ) : (
-                verificationStatus === "verified" ? "Verify Document" : "Reject Document"
+                      <>
+                        <XCircle className="h-4 w-4 mr-2" />
+                        Reject Document
+                      </>
+                    )}
+                  </>
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        
+        {/* Document Viewer Dialog */}
+        <Dialog open={showDocumentDialog} onOpenChange={setShowDocumentDialog}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0">
+            <DialogHeader className="px-4 py-2 border-b">
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-lg">{selectedDocument?.name}</DialogTitle>
+                <div className="flex items-center gap-2">
+                  {selectedDocument && (
+                    <>
+                      <Badge 
+                        variant={selectedDocument.verificationStatus === "verified" ? "default" : "outline"}
+                        className={
+                          selectedDocument.verificationStatus === "verified" ? "bg-green-100 text-green-800 hover:bg-green-100" :
+                          selectedDocument.verificationStatus === "rejected" ? "bg-red-100 text-red-800 hover:bg-red-100" :
+                          "bg-amber-100 text-amber-800 hover:bg-amber-100"
+                        }
+                      >
+                        {selectedDocument.verificationStatus.charAt(0).toUpperCase() + selectedDocument.verificationStatus.slice(1)}
+                      </Badge>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDownloadDocument(selectedDocument)}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <DialogDescription>
+                {selectedDocument && (
+                  <>Uploaded by {getDocumentUserName(selectedDocument.userId)} on {new Date(selectedDocument.dateUploaded).toLocaleDateString()}</>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex-grow min-h-[500px] overflow-hidden">
+              {selectedDocument && (
+                <DocumentPreview document={selectedDocument} onClose={() => {}} />
+              )}
+            </div>
+            
+            <DialogFooter className="p-4 border-t">
+              {selectedDocument && selectedDocument.verificationStatus === 'pending' && (
+                <div className="flex gap-2 w-full justify-end">
+                  <Button 
+                    variant="outline" 
+                    className="border-red-500 text-red-600 hover:bg-red-50"
+                    onClick={() => {
+                      setShowDocumentDialog(false);
+                      handleRejectDocument(selectedDocument);
+                    }}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700" 
+                    onClick={() => {
+                      setShowDocumentDialog(false);
+                      handleVerifyDocument(selectedDocument);
+                    }}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-1" />
+                    Verify Document
+                  </Button>
+                </div>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Tabs>
     </div>
   );
 };

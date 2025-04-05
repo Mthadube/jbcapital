@@ -92,8 +92,8 @@ const FinancialForm: React.FC = () => {
       totalMonthlyExpenses: calculateTotalExpenses(data),
     });
     
-    toast.success("Financial information saved!");
-    nextStep();
+      toast.success("Financial information saved!");
+      nextStep();
   };
   
   const calculateTotalExpenses = (data: FinancialInfoFormData) => {
@@ -228,7 +228,7 @@ const FinancialForm: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
+              </div>
       
       <div className="glass-card p-6">
         <h2 className="heading-md mb-6">Financial Overview</h2>
@@ -267,7 +267,7 @@ const FinancialForm: React.FC = () => {
                 control={control}
                 render={({ field }) => (
                   <Checkbox 
-                    id="existingLoans" 
+                    id="existingLoans"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />

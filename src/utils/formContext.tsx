@@ -133,7 +133,10 @@ export const FormProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const nextStep = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
+      // Directly force the update instead of using the setter function
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      
       window.scrollTo(0, 0);
     }
   };
@@ -147,7 +150,12 @@ export const FormProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const goToStep = (step: number) => {
     if (step >= 1 && step <= totalSteps) {
+      // Set state directly instead of using the setter function
       setCurrentStep(step);
+      
+      // Force a rerender by updating some other piece of state if needed
+      setFormData(prev => ({...prev}));
+      
       window.scrollTo(0, 0);
     }
   };

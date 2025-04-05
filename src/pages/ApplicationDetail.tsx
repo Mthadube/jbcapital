@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   ArrowLeft,
   Calendar,
@@ -30,7 +31,10 @@ import {
   Home,
   FilePen,
   ArrowRight,
-  UserSearch
+  UserSearch,
+  MoreVertical,
+  FileX,
+  Trash
 } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
@@ -39,6 +43,10 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerFooter } from "@/components/ui/drawer";
 import UserProfileView from "@/components/admin/UserProfileView";
 import { useAppData } from '@/utils/AppDataContext';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { WORKFLOW_STEPS, ApplicationStatus } from "@/components/admin/ApplicationProcessing";
 
 const ApplicationDetail = () => {
   const { id } = useParams();
@@ -53,138 +61,20 @@ const ApplicationDetail = () => {
   
   const { updateApplication, getApplicationById, getUserById } = useAppData();
   
-  const applications = [
-    { 
-      id: "APP-2023-0421", 
-      name: "John Smith", 
-      email: "john.smith@example.com",
-      phone: "+27 82 123 4567",
-      dob: "1985-06-15",
-      idNumber: "8506155012089",
-      amount: "R250,000", 
-      status: "Document Review", 
-      date: "2023-06-21", 
-      documents: [
-        { name: "ID Document", url: "#", status: "Verified", date: "2023-06-22" },
-        { name: "Proof of Income", url: "#", status: "Verified", date: "2023-06-22" },
-        { name: "Bank Statements", url: "#", status: "Pending", date: "2023-06-21" }
-      ], 
-      completion: 80,
-      requiredAction: "Verify employment details",
-      notes: "Applicant has steady employment for 5+ years. Need to verify latest income statement.",
-      statusHistory: [
-        { status: "Initial Screening", date: "2023-06-21", user: "Admin", notes: "Application received and screening initiated" },
-        { status: "Document Review", date: "2023-06-22", user: "Admin", notes: "Initial screening passed, moving to document review" }
-      ],
-      personalInfo: {
-        address: "123 Main Street, Sandton, Johannesburg",
-        province: "Gauteng",
-        postalCode: "2196",
-        gender: "Male",
-        maritalStatus: "Married",
-        dependents: 2
-      },
-      employmentInfo: {
-        employmentStatus: "Full-time",
-        employer: "ABC Corporation",
-        jobTitle: "Senior Manager",
-        employmentLength: "6 years",
-        monthlyIncome: "R45,000",
-        employerAddress: "456 Corporate Park, Sandton, Johannesburg"
-      },
-      financialInfo: {
-        bankName: "Standard Bank",
-        accountNumber: "XXXX-XXXX-XXXX-1234",
-        accountType: "Cheque",
-        monthlyExpenses: "R25,000",
-        existingLoans: [
-          { type: "Car Loan", amount: "R350,000", monthlyPayment: "R6,500", remainingTerm: "36 months" }
-        ],
-        creditScore: 720
-      },
-      loanDetails: {
-        purpose: "Home Improvement",
-        term: "60 months",
-        requestedAmount: "R250,000",
-        interestRate: "12.5%",
-        monthlyPayment: "R5,625",
-        totalRepayment: "R337,500",
-        startDate: "2023-08-01",
-        securityOffered: "None"
-      }
-    },
-    { 
-      id: "APP-2023-0422", 
-      name: "Sarah Johnson", 
-      email: "sarah.johnson@example.com",
-      phone: "+27 83 234 5678",
-      dob: "1990-03-22",
-      idNumber: "9003225012089",
-      amount: "R120,000", 
-      status: "Credit Assessment", 
-      date: "2023-06-21", 
-      documents: [
-        { name: "ID Document", url: "#", status: "Verified", date: "2023-06-22" },
-        { name: "Proof of Income", url: "#", status: "Pending", date: "2023-06-21" }
-      ], 
-      completion: 65,
-      requiredAction: "Check credit history",
-      notes: "Credit score is borderline. Need additional verification.",
-      statusHistory: [
-        { status: "Initial Screening", date: "2023-06-21", user: "Admin", notes: "Application received and screening initiated" },
-        { status: "Document Review", date: "2023-06-22", user: "Admin", notes: "Initial screening passed, moving to document review" },
-        { status: "Credit Assessment", date: "2023-06-23", user: "Admin", notes: "Documents verified, moving to credit assessment" }
-      ],
-      personalInfo: {
-        address: "456 Oak Avenue, Rosebank, Johannesburg",
-        province: "Gauteng",
-        postalCode: "2196",
-        gender: "Female",
-        maritalStatus: "Single",
-        dependents: 0
-      },
-      employmentInfo: {
-        employmentStatus: "Full-time",
-        employer: "XYZ Ltd",
-        jobTitle: "Marketing Specialist",
-        employmentLength: "3 years",
-        monthlyIncome: "R30,000",
-        employerAddress: "789 Business Park, Rosebank, Johannesburg"
-      },
-      financialInfo: {
-        bankName: "FNB",
-        accountNumber: "XXXX-XXXX-XXXX-5678",
-        accountType: "Savings",
-        monthlyExpenses: "R18,000",
-        existingLoans: [
-          { type: "Personal Loan", amount: "R50,000", monthlyPayment: "R2,000", remainingTerm: "18 months" }
-        ],
-        creditScore: 680
-      },
-      loanDetails: {
-        purpose: "Debt Consolidation",
-        term: "36 months",
-        requestedAmount: "R120,000",
-        interestRate: "14.5%",
-        monthlyPayment: "R4,100",
-        totalRepayment: "R147,600",
-        startDate: "2023-08-01",
-        securityOffered: "None"
-      }
-    }
-  ];
-  
   useEffect(() => {
     setLoading(true);
     
+    // Use a small timeout to simulate loading for better UX
     setTimeout(() => {
-      const foundApplication = applications.find(app => app.id === id);
+      if (id) {
+        const foundApplication = getApplicationById(id);
       if (foundApplication) {
         setApplication(foundApplication);
+        }
       }
       setLoading(false);
-    }, 500);
-  }, [id]);
+    }, 300);
+  }, [id, getApplicationById]);
   
   if (loading) {
     return (
@@ -213,67 +103,84 @@ const ApplicationDetail = () => {
   }
   
   const handleAdvanceStage = () => {
-    const stageOrder = [
-      "Initial Screening", 
-      "Document Review", 
-      "Credit Assessment", 
-      "Income Verification", 
-      "Final Decision",
-      "Approved"
+    if (!application) return;
+    
+    // Get the current workflow step
+    const currentStep = WORKFLOW_STEPS.find(step => step.id === application.status);
+    
+    if (!currentStep || !currentStep.nextStep) {
+      toast.info("Application is already in its final state");
+      return;
+    }
+    
+    // If the next step is "decision", we need special handling
+    if (currentStep.nextStep === "decision") {
+      toast.info("Application is ready for final decision", {
+        description: "Please choose to approve or reject this application"
+      });
+      return;
+    }
+    
+    // Otherwise, move to the next step
+    const newStatus = currentStep.nextStep as ApplicationStatus;
+    const newCompletion = Math.min((application.completion || 0) + 25, 100);
+    
+    const updatedHistory = [
+      ...(application.statusHistory || []),
+      { 
+        status: newStatus, 
+        date: new Date().toISOString().split('T')[0], 
+        user: "Admin", 
+        notes: statusNote || `Advanced to ${newStatus}` 
+      }
     ];
     
-    const currentIndex = stageOrder.indexOf(application.status);
-    if (currentIndex < stageOrder.length - 1) {
-      const newStatus = stageOrder[currentIndex + 1];
-      const newCompletion = Math.min(application.completion + 15, 100);
-      
-      const updatedHistory = [
-        ...application.statusHistory,
-        { 
-          status: newStatus, 
-          date: new Date().toISOString().split('T')[0], 
-          user: "Admin", 
-          notes: statusNote || `Advanced to ${newStatus}` 
-        }
-      ];
-      
-      setApplication({
-        ...application,
-        status: newStatus,
-        completion: newCompletion,
-        statusHistory: updatedHistory
-      });
-      
-      toast.success(`Application ${application.id} advanced to ${newStatus}`);
-      setProcessingDialogOpen(false);
-      setStatusNote("");
-    }
+    // Update status in the application
+    updateApplication(application.id, {
+      status: newStatus as any,
+      completion: newCompletion
+    });
+    
+    setApplication({
+      ...application,
+      status: newStatus,
+      completion: newCompletion,
+      statusHistory: updatedHistory
+    });
+    
+    toast.success(`Application ${application.id} advanced to ${WORKFLOW_STEPS.find(step => step.id === newStatus)?.name || newStatus}`);
+    setProcessingDialogOpen(false);
+    setStatusNote("");
   };
 
-  const handleApproveApplication = () => {
-    updateApplication(id, {
-      status: "Approved",
+  const handleApproveApplication = async () => {
+    if (!id || !application) return;
+    
+    await updateApplication(id, {
+      status: "approved",
       completion: 100
     });
     
     setApplication({
       ...application,
-      status: "Approved",
+      status: "approved",
       completion: 100
     });
     
     toast.success(`Application ${id} has been approved!`);
   };
 
-  const handleRejectApplication = () => {
-    updateApplication(id, {
-      status: "Rejected",
+  const handleRejectApplication = async () => {
+    if (!id || !application) return;
+    
+    await updateApplication(id, {
+      status: "rejected",
       completion: 100
     });
     
     setApplication({
       ...application,
-      status: "Rejected",
+      status: "rejected",
       completion: 100
     });
     
@@ -281,7 +188,11 @@ const ApplicationDetail = () => {
   };
   
   const handleVerifyDocument = (docIndex: number) => {
+    if (!application || !application.documents) return;
+    
     const updatedDocuments = [...application.documents];
+    if (!updatedDocuments[docIndex]) return;
+    
     updatedDocuments[docIndex] = {
       ...updatedDocuments[docIndex],
       status: "Verified",
@@ -297,15 +208,17 @@ const ApplicationDetail = () => {
   };
   
   const handleAddNote = () => {
+    if (!application) return;
+    
     if (!statusNote.trim()) {
       toast.error("Please enter a note");
       return;
     }
     
     const updatedHistory = [
-      ...application.statusHistory,
+      ...(application.statusHistory || []),
       { 
-        status: application.status, 
+        status: application.status || "Status update", 
         date: new Date().toISOString().split('T')[0], 
         user: "Admin", 
         notes: statusNote 
@@ -323,102 +236,154 @@ const ApplicationDetail = () => {
   };
   
   const getStatusDisplay = (status: string) => {
-    const statusMap: Record<string, { color: string, icon: React.ReactNode }> = {
-      "Initial Screening": { color: "bg-blue-100 text-blue-800", icon: <Clock size={16} className="text-blue-500" /> },
-      "Document Review": { color: "bg-amber-100 text-amber-800", icon: <FileText size={16} className="text-amber-500" /> },
-      "Credit Assessment": { color: "bg-purple-100 text-purple-800", icon: <CreditCard size={16} className="text-purple-500" /> },
-      "Income Verification": { color: "bg-indigo-100 text-indigo-800", icon: <Briefcase size={16} className="text-indigo-500" /> },
-      "Final Decision": { color: "bg-orange-100 text-orange-800", icon: <FilePen size={16} className="text-orange-500" /> },
-      "Approved": { color: "bg-green-100 text-green-800", icon: <CheckCircle size={16} className="text-green-500" /> },
-      "Rejected": { color: "bg-red-100 text-red-800", icon: <XCircle size={16} className="text-red-500" /> }
-    };
+    const workflowStep = WORKFLOW_STEPS.find(step => step.id === status);
     
-    return statusMap[status] || { color: "bg-gray-100 text-gray-800", icon: <Clock size={16} className="text-gray-500" /> };
+    if (workflowStep) {
+      return { 
+        color: workflowStep.color, 
+        icon: workflowStep.icon 
+      };
+    }
+    
+    // Fallback for unknown statuses
+    return { color: "bg-gray-100 text-gray-800", icon: <Clock size={16} className="text-gray-500" /> };
   };
   
-  const handleUpdateStatus = (newStatus: string) => {
-    const newCompletion = 
-      newStatus === "Approved" || newStatus === "Rejected" 
-        ? 100 
-        : Math.min(application.completion + 15, 95);
+  const handleUpdateStatus = async (newStatus: string) => {
+    // Find the application
+    if (!application || !id) return;
     
-    updateApplication(id, {
-      status: newStatus,
-      completion: newCompletion
-    });
-    
-    setApplication({
-      ...application,
-      status: newStatus,
-      completion: newCompletion
-    });
-    
-    toast.success(`Application status updated to ${newStatus}`);
+    try {
+      // Find the workflow step that matches the requested status
+      const workflowStep = WORKFLOW_STEPS.find(step => step.id === newStatus || step.name === newStatus);
+      
+      if (!workflowStep) {
+        toast.error(`Unknown status: ${newStatus}`);
+        return;
+      }
+      
+      // Update the application status
+      const success = await updateApplication(id, {
+        status: workflowStep.id as any // Type casting for now
+      });
+      
+      if (success) {
+        // Update the local state
+        const updatedHistory = [
+          ...(application.statusHistory || []),
+          { 
+            status: workflowStep.id, 
+            date: new Date().toISOString().split('T')[0], 
+            user: "Admin", 
+            notes: statusNote || `Status updated to ${workflowStep.name}` 
+          }
+        ];
+        
+        setApplication({
+          ...application,
+          status: workflowStep.id,
+          statusHistory: updatedHistory
+        });
+        
+        toast.success(`Application status updated to ${workflowStep.name}`);
+        setProcessingDialogOpen(false);
+        setStatusNote("");
+      } else {
+        toast.error("Failed to update application status");
+      }
+    } catch (error) {
+      console.error("Error updating application status:", error);
+      toast.error("An error occurred while updating status");
+    }
   };
   
-  const statusDisplay = getStatusDisplay(application.status);
+  // Add nullish coalescing operators to handle potentially undefined values
+  const statusDisplay = application?.status ? getStatusDisplay(application.status) : 
+    { color: "bg-gray-100 text-gray-800", icon: <Clock size={16} className="text-gray-500" /> };
   
   // Create a user profile object from the application data
   const getUserProfileData = () => {
+    if (!application) return null;
+    
     return {
-      id: application.id,
-      firstName: application.name.split(' ')[0],
-      lastName: application.name.split(' ')[1] || '',
-      email: application.email,
-      phone: application.phone,
-      idNumber: application.idNumber,
-      dateOfBirth: application.dob,
-      gender: application.personalInfo?.gender,
-      maritalStatus: application.personalInfo?.maritalStatus,
-      dependents: application.personalInfo?.dependents,
-      address: application.personalInfo?.address,
-      suburb: application.personalInfo?.province, // Mixing field names to show how it adapts
-      city: application.personalInfo?.province.split(', ')[0],
-      state: application.personalInfo?.province,
-      zipCode: application.personalInfo?.postalCode,
+      id: application.id || '',
+      firstName: application.name ? application.name.split(' ')[0] : '',
+      lastName: application.name ? (application.name.split(' ')[1] || '') : '',
+      email: application.email || '',
+      phone: application.phone || '',
+      idNumber: application.idNumber || '',
+      dateOfBirth: application.dob || '',
+      gender: application.personalInfo?.gender || '',
+      maritalStatus: application.personalInfo?.maritalStatus || '',
+      dependents: application.personalInfo?.dependents || 0,
+      address: application.personalInfo?.address || '',
+      suburb: application.personalInfo?.province || '', // Mixing field names to show how it adapts
+      city: application.personalInfo?.province ? application.personalInfo.province.split(', ')[0] : '',
+      state: application.personalInfo?.province || '',
+      zipCode: application.personalInfo?.postalCode || '',
       country: "South Africa",
-      employmentStatus: application.employmentInfo?.employmentStatus,
-      employmentType: application.employmentInfo?.employmentType || application.employmentInfo?.employmentStatus,
-      employmentSector: application.employmentInfo?.employer, // Using employer as sector for demo
-      employerName: application.employmentInfo?.employer,
-      jobTitle: application.employmentInfo?.jobTitle,
-      yearsEmployed: application.employmentInfo?.employmentLength?.split(' ')[0],
-      monthlyIncome: parseFloat(application.employmentInfo?.monthlyIncome?.replace(/[^\d.]/g, '')),
-      paymentDate: application.employmentInfo?.paymentDate,
-      bankName: application.financialInfo?.bankName,
-      accountType: application.financialInfo?.accountType,
-      accountNumber: application.financialInfo?.accountNumber,
-      creditScore: application.financialInfo?.creditScore,
-      existingLoans: application.financialInfo?.existingLoans?.length > 0,
-      existingLoanAmount: application.financialInfo?.existingLoans?.[0]?.amount
-        ? parseFloat(application.financialInfo.existingLoans[0].amount.replace(/[^\d.]/g, ''))
+      employmentStatus: application.employmentInfo?.employmentStatus || '',
+      employmentType: application.employmentInfo?.employmentType || application.employmentInfo?.employmentStatus || '',
+      employmentSector: application.employmentInfo?.employer || '', // Using employer as sector for demo
+      employerName: application.employmentInfo?.employer || '',
+      jobTitle: application.employmentInfo?.jobTitle || '',
+      yearsEmployed: application.employmentInfo?.employmentLength ? application.employmentInfo.employmentLength.split(' ')[0] : '',
+      monthlyIncome: application.employmentInfo?.monthlyIncome && typeof application.employmentInfo.monthlyIncome === 'string' ? 
+        parseFloat(application.employmentInfo.monthlyIncome.replace(/[^\d.]/g, '') || '0') : 0,
+      paymentDate: application.employmentInfo?.paymentDate || '',
+      bankName: application.financialInfo?.bankName || '',
+      accountType: application.financialInfo?.accountType || '',
+      accountNumber: application.financialInfo?.accountNumber || '',
+      creditScore: application.financialInfo?.creditScore || 0,
+      existingLoans: application.financialInfo?.existingLoans?.length > 0 || false,
+      existingLoanAmount: application.financialInfo?.existingLoans?.[0]?.amount && typeof application.financialInfo.existingLoans[0].amount === 'string'
+        ? parseFloat(application.financialInfo.existingLoans[0].amount.replace(/[^\d.]/g, '') || '0') 
         : 0,
-      monthlyDebt: parseFloat(application.financialInfo?.monthlyDebt?.replace(/[^\d.]/g, '') || "0"),
+      monthlyDebt: application.financialInfo?.monthlyDebt && typeof application.financialInfo.monthlyDebt === 'string'
+        ? parseFloat(application.financialInfo.monthlyDebt.replace(/[^\d.]/g, '') || "0") 
+        : 0,
       totalMonthlyExpenses: 0, // Would calculate from all expenses
       loans: [
         {
-          id: application.id,
-          type: application.loanDetails?.purpose.toLowerCase(),
-          amount: parseFloat(application.loanDetails?.requestedAmount.replace(/[^\d.]/g, '')),
-          interestRate: parseFloat(application.loanDetails?.interestRate.replace(/[^0-9.]/g, '')),
-          term: parseInt(application.loanDetails?.term),
-          monthlyPayment: parseFloat(application.loanDetails?.monthlyPayment.replace(/[^\d.]/g, '')),
-          status: application.status === "Approved" ? "active" : application.status === "Rejected" ? "rejected" : "pending",
-          dateApplied: application.date,
-          dateIssued: application.status === "Approved" ? application.date : undefined
+          id: application.id || '',
+          type: application.loanDetails?.purpose ? application.loanDetails.purpose.toLowerCase() : 'personal',
+          amount: application.loanDetails?.requestedAmount && typeof application.loanDetails.requestedAmount === 'string'
+            ? parseFloat(application.loanDetails.requestedAmount.replace(/[^\d.]/g, '') || '0') 
+            : parseFloat(application.amount || '0'),
+          interestRate: application.loanDetails?.interestRate && typeof application.loanDetails.interestRate === 'string'
+            ? parseFloat(application.loanDetails.interestRate.replace(/[^0-9.]/g, '') || '0') 
+            : 0,
+          term: application.loanDetails?.term ? parseInt(application.loanDetails.term || '0') : 0,
+          monthlyPayment: application.loanDetails?.monthlyPayment && typeof application.loanDetails.monthlyPayment === 'string'
+            ? parseFloat(application.loanDetails.monthlyPayment.replace(/[^\d.]/g, '') || '0') 
+            : 0,
+          status: application.status === "Approved" || application.status === "approved" ? "active" : 
+                 application.status === "Rejected" || application.status === "rejected" ? "rejected" : "pending",
+          dateApplied: application.date || new Date().toISOString(),
+          dateIssued: (application.status === "Approved" || application.status === "approved") ? application.date : undefined
         }
       ],
-      documents: application.documents.map(doc => ({
-        name: doc.name,
-        type: doc.name.toLowerCase().replace(/\s+/g, '_'),
-        dateUploaded: doc.date,
-        verificationStatus: doc.status.toLowerCase()
-      }))
+      documents: application.documents ? application.documents.map(doc => ({
+        name: doc.name || 'Document',
+        type: doc.name ? doc.name.toLowerCase().replace(/\s+/g, '_') : 'document',
+        dateUploaded: doc.date || new Date().toISOString(),
+        verificationStatus: doc.status ? doc.status.toLowerCase() : 'pending'
+      })) : []
     };
   };
   
   const handleViewFullProfile = (userData: any) => {
     navigate(`/admin/user/${userData.id}`);
+  };
+  
+  const getDocumentStatusIcon = (status: string) => {
+    const statusMap: Record<string, React.ReactNode> = {
+      "verified": <CheckCircle size={16} className="text-green-500" />,
+      "pending": <Clock size={16} className="text-blue-500" />,
+      "unverified": <XCircle size={16} className="text-red-500" />
+    };
+    
+    return statusMap[status] || <Clock size={16} className="text-gray-500" />;
   };
   
   return (
@@ -433,15 +398,15 @@ const ApplicationDetail = () => {
             </Button>
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
-                Application {application.id}
+                Application {application?.id || 'Not Found'}
                 <Badge className={statusDisplay.color}>
                   <div className="flex items-center gap-1">
                     {statusDisplay.icon}
-                    <span>{application.status}</span>
+                    <span>{application?.status || 'Unknown'}</span>
                   </div>
                 </Badge>
               </h1>
-              <p className="text-muted-foreground">Submitted on {application.date}</p>
+              <p className="text-muted-foreground">Submitted on {application?.date || 'Unknown date'}</p>
             </div>
           </div>
           
@@ -456,7 +421,8 @@ const ApplicationDetail = () => {
             <Button 
               variant="default" 
               onClick={() => setProcessingDialogOpen(true)}
-              disabled={application.status === "Approved" || application.status === "Rejected"}
+              disabled={application?.status === "Approved" || application?.status === "approved" || 
+                      application?.status === "Rejected" || application?.status === "rejected"}
             >
               <Clock className="mr-2 h-4 w-4" />
               Process Application
@@ -475,16 +441,16 @@ const ApplicationDetail = () => {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium">Application Progress</span>
-            <span className="text-sm font-medium">{application.completion}%</span>
+            <span className="text-sm font-medium">{application?.completion || 0}%</span>
           </div>
           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
             <div 
               className={`h-full rounded-full ${
-                application.completion >= 80 ? "bg-green-500" : 
-                application.completion >= 50 ? "bg-blue-500" : 
+                (application?.completion || 0) >= 80 ? "bg-green-500" : 
+                (application?.completion || 0) >= 50 ? "bg-blue-500" : 
                 "bg-amber-500"
               }`}
-              style={{ width: `${application.completion}%` }}
+              style={{ width: `${application?.completion || 0}%` }}
             ></div>
           </div>
         </div>
@@ -508,9 +474,9 @@ const ApplicationDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col">
-                    <span className="text-lg font-semibold">{application.name}</span>
-                    <span className="text-sm text-muted-foreground">{application.email}</span>
-                    <span className="text-sm text-muted-foreground">{application.phone}</span>
+                    <span className="text-lg font-semibold">{application?.name || 'No name provided'}</span>
+                    <span className="text-sm text-muted-foreground">{application?.email || 'No email provided'}</span>
+                    <span className="text-sm text-muted-foreground">{application?.phone || 'No phone provided'}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -521,9 +487,9 @@ const ApplicationDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col">
-                    <span className="text-lg font-semibold">{application.amount}</span>
-                    <span className="text-sm text-muted-foreground">{application.loanDetails.purpose}</span>
-                    <span className="text-sm text-muted-foreground">{application.loanDetails.term}</span>
+                    <span className="text-lg font-semibold">{application?.amount || 'N/A'}</span>
+                    <span className="text-sm text-muted-foreground">{application?.loanDetails?.purpose || 'N/A'}</span>
+                    <span className="text-sm text-muted-foreground">{application?.loanDetails?.term || 'N/A'}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -534,7 +500,7 @@ const ApplicationDetail = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm bg-amber-50 p-2 rounded border border-amber-100">
-                    {application.requiredAction}
+                    {application?.requiredAction || 'No action required'}
                   </div>
                 </CardContent>
               </Card>
@@ -551,11 +517,11 @@ const ApplicationDetail = () => {
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">Personal Information</h3>
                     <div className="grid grid-cols-2 gap-y-2">
                       <span className="text-sm font-medium">ID Number:</span>
-                      <span className="text-sm">{application.idNumber}</span>
+                      <span className="text-sm">{application?.idNumber || 'N/A'}</span>
                       <span className="text-sm font-medium">Date of Birth:</span>
-                      <span className="text-sm">{application.dob}</span>
+                      <span className="text-sm">{application?.dob || 'N/A'}</span>
                       <span className="text-sm font-medium">Marital Status:</span>
-                      <span className="text-sm">{application.personalInfo.maritalStatus}</span>
+                      <span className="text-sm">{application?.personalInfo?.maritalStatus || 'N/A'}</span>
                     </div>
                   </div>
                   
@@ -563,11 +529,11 @@ const ApplicationDetail = () => {
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">Employment</h3>
                     <div className="grid grid-cols-2 gap-y-2">
                       <span className="text-sm font-medium">Employer:</span>
-                      <span className="text-sm">{application.employmentInfo.employer}</span>
+                      <span className="text-sm">{application?.employmentInfo?.employer || 'N/A'}</span>
                       <span className="text-sm font-medium">Job Title:</span>
-                      <span className="text-sm">{application.employmentInfo.jobTitle}</span>
+                      <span className="text-sm">{application?.employmentInfo?.jobTitle || 'N/A'}</span>
                       <span className="text-sm font-medium">Monthly Income:</span>
-                      <span className="text-sm">{application.employmentInfo.monthlyIncome}</span>
+                      <span className="text-sm">{application?.employmentInfo?.monthlyIncome || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -577,23 +543,25 @@ const ApplicationDetail = () => {
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">Financial Information</h3>
                     <div className="grid grid-cols-2 gap-y-2">
                       <span className="text-sm font-medium">Bank:</span>
-                      <span className="text-sm">{application.financialInfo.bankName}</span>
+                      <span className="text-sm">{application?.financialInfo?.bankName || 'N/A'}</span>
                       <span className="text-sm font-medium">Credit Score:</span>
-                      <span className="text-sm">{application.financialInfo.creditScore}</span>
+                      <span className="text-sm">{application?.financialInfo?.creditScore || 'N/A'}</span>
                       <span className="text-sm font-medium">Monthly Expenses:</span>
-                      <span className="text-sm">{application.financialInfo.monthlyExpenses}</span>
+                      <span className="text-sm">{application?.financialInfo?.monthlyExpenses || 'N/A'}</span>
                     </div>
                   </div>
                   
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">Loan Details</h3>
                     <div className="grid grid-cols-2 gap-y-2">
-                      <span className="text-sm font-medium">Purpose:</span>
-                      <span className="text-sm">{application.loanDetails.purpose}</span>
                       <span className="text-sm font-medium">Amount:</span>
-                      <span className="text-sm">{application.loanDetails.requestedAmount}</span>
-                      <span className="text-sm font-medium">Monthly Payment:</span>
-                      <span className="text-sm">{application.loanDetails.monthlyPayment}</span>
+                      <span className="text-sm">{application?.amount || 'N/A'}</span>
+                      <span className="text-sm font-medium">Purpose:</span>
+                      <span className="text-sm">{application?.loanDetails?.purpose || 'N/A'}</span>
+                      <span className="text-sm font-medium">Term:</span>
+                      <span className="text-sm">{application?.loanDetails?.term || 'N/A'}</span>
+                      <span className="text-sm font-medium">Interest Rate:</span>
+                      <span className="text-sm">{application?.loanDetails?.interestRate || 'N/A'}</span>
                     </div>
                   </div>
                 </div>
@@ -606,11 +574,12 @@ const ApplicationDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {application.statusHistory.slice(-3).reverse().map((history: any, index: number) => (
+                  {application?.statusHistory ? (
+                    application.statusHistory.slice(-3).reverse().map((history: any, index: number) => (
                     <div key={index} className="flex items-start gap-2">
                       <div className={`mt-0.5 h-2 w-2 rounded-full ${
-                        history.status === "Approved" ? "bg-green-500" : 
-                        history.status === "Rejected" ? "bg-red-500" : 
+                          history.status === "Approved" || history.status === "approved" ? "bg-green-500" : 
+                          history.status === "Rejected" || history.status === "rejected" ? "bg-red-500" : 
                         "bg-blue-500"
                       }`} />
                       <div>
@@ -618,10 +587,28 @@ const ApplicationDetail = () => {
                           <span className="font-medium">{history.status}</span>
                           <span className="text-xs text-muted-foreground">{history.date}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground">{history.notes}</p>
+                        <p className="text-sm text-muted-foreground">{history.comment || 'No comment provided'}</p>
+                        {history.user && typeof history.user === 'object' && history.user.name ? (
+                          <div className="mt-2 flex items-center">
+                            <Avatar className="h-6 w-6 mr-2">
+                              <AvatarFallback>{history.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs">By {history.user.name}</span>
+                      </div>
+                        ) : history.user && typeof history.user === 'string' ? (
+                          <div className="mt-2 flex items-center">
+                            <Avatar className="h-6 w-6 mr-2">
+                              <AvatarFallback>{history.user.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs">By {history.user}</span>
+                    </div>
+                        ) : null}
                       </div>
                     </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No status history available</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -631,73 +618,73 @@ const ApplicationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
-                <CardDescription>Applicant's personal details</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="grid gap-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Basic Information</h3>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Full Name:</span>
-                          <span className="text-sm col-span-2">{application.name}</span>
+                      <Label>Full Name</Label>
+                      <Input value={application?.name || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">ID Number:</span>
-                          <span className="text-sm col-span-2">{application.idNumber}</span>
+                    <div>
+                      <Label>Date of Birth</Label>
+                      <Input value={application?.dob || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Date of Birth:</span>
-                          <span className="text-sm col-span-2">{application.dob}</span>
+                    <div>
+                      <Label>ID Number</Label>
+                      <Input value={application?.idNumber || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Gender:</span>
-                          <span className="text-sm col-span-2">{application.personalInfo.gender}</span>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Marital Status:</span>
-                          <span className="text-sm col-span-2">{application.personalInfo.maritalStatus}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Email Address</Label>
+                      <Input value={application?.email || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Dependents:</span>
-                          <span className="text-sm col-span-2">{application.personalInfo.dependents}</span>
+                    <div>
+                      <Label>Phone Number</Label>
+                      <Input value={application?.phone || ''} readOnly />
                         </div>
+                    <div>
+                      <Label>Marital Status</Label>
+                      <Input value={application?.personalInfo?.maritalStatus || ''} readOnly />
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="space-y-4">
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Address Information</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Contact Information</h3>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Email:</span>
-                          <span className="text-sm col-span-2">{application.email}</span>
+                      <Label>Street Address</Label>
+                      <Input value={application?.address?.street || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Phone:</span>
-                          <span className="text-sm col-span-2">{application.phone}</span>
+                    <div>
+                      <Label>City</Label>
+                      <Input value={application?.address?.city || ''} readOnly />
                         </div>
+                    <div>
+                      <Label>State/Province</Label>
+                      <Input value={application?.address?.state || ''} readOnly />
                       </div>
                     </div>
-                    
+                  <div className="space-y-3">
                     <div>
-                      <h3 className="text-sm font-medium text-muted-foreground mb-1">Address</h3>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Address:</span>
-                          <span className="text-sm col-span-2">{application.personalInfo.address}</span>
+                      <Label>Zip/Postal Code</Label>
+                      <Input value={application?.address?.zipCode || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Province:</span>
-                          <span className="text-sm col-span-2">{application.personalInfo.province}</span>
+                    <div>
+                      <Label>Country</Label>
+                      <Input value={application?.address?.country || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Postal Code:</span>
-                          <span className="text-sm col-span-2">{application.personalInfo.postalCode}</span>
-                        </div>
-                      </div>
+                    <div>
+                      <Label>Time at Address</Label>
+                      <Input value={application?.address?.timeAtAddress || ''} readOnly />
                     </div>
                   </div>
                 </div>
@@ -709,55 +696,65 @@ const ApplicationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Employment Information</CardTitle>
-                <CardDescription>Applicant's employment and income details</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="grid gap-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Employment Status:</span>
-                        <span className="text-sm col-span-2">{application.employmentInfo.employmentStatus}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Employment Status</Label>
+                      <Input value={application?.employmentInfo?.status || ''} readOnly />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Employer:</span>
-                        <span className="text-sm col-span-2">{application.employmentInfo.employer}</span>
+                    <div>
+                      <Label>Employer Name</Label>
+                      <Input value={application?.employmentInfo?.employer || ''} readOnly />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Job Title:</span>
-                        <span className="text-sm col-span-2">{application.employmentInfo.jobTitle}</span>
+                    <div>
+                      <Label>Job Title</Label>
+                      <Input value={application?.employmentInfo?.jobTitle || ''} readOnly />
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Employment Length:</span>
-                        <span className="text-sm col-span-2">{application.employmentInfo.employmentLength}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Years at Employer</Label>
+                      <Input value={application?.employmentInfo?.yearsAtEmployer || ''} readOnly />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Monthly Income:</span>
-                        <span className="text-sm col-span-2">{application.employmentInfo.monthlyIncome}</span>
+                    <div>
+                      <Label>Monthly Income</Label>
+                      <Input value={application?.employmentInfo?.monthlyIncome || ''} readOnly />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Employer Address:</span>
-                        <span className="text-sm col-span-2">{application.employmentInfo.employerAddress}</span>
+                    <div>
+                      <Label>Payment Frequency</Label>
+                      <Input value={application?.employmentInfo?.paymentFrequency || ''} readOnly />
                       </div>
                     </div>
                   </div>
-                  
-                  <Separator />
-                  
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Employer Contact Information</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Income Verification</h3>
-                    <div className="rounded-md bg-muted p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock size={16} className="text-blue-500" />
-                        <span className="text-sm">Income verification status: Pending</span>
+                      <Label>Employer Phone</Label>
+                      <Input value={application?.employmentInfo?.employerPhone || ''} readOnly />
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Income verification is required to validate the applicant's stated monthly income.
-                        Please check the documents section for pay slips and bank statements.
-                      </p>
+                    <div>
+                      <Label>Employer Address</Label>
+                      <Input value={application?.employmentInfo?.employerAddress || ''} readOnly />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Supervisor Name</Label>
+                      <Input value={application?.employmentInfo?.supervisorName || ''} readOnly />
+                    </div>
+                    <div>
+                      <Label>Employment Verification Contact</Label>
+                      <Input value={application?.employmentInfo?.verificationContact || ''} readOnly />
                     </div>
                   </div>
                 </div>
@@ -769,116 +766,90 @@ const ApplicationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Financial Information</CardTitle>
-                <CardDescription>Banking details and financial status</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Banking Details</h3>
+              <CardContent className="grid gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Bank Name:</span>
-                          <span className="text-sm col-span-2">{application.financialInfo.bankName}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Bank Name</Label>
+                      <Input value={application?.financialInfo?.bankName || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Account Number:</span>
-                          <span className="text-sm col-span-2">{application.financialInfo.accountNumber}</span>
+                    <div>
+                      <Label>Account Type</Label>
+                      <Input value={application?.financialInfo?.accountType || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Account Type:</span>
-                          <span className="text-sm col-span-2">{application.financialInfo.accountType}</span>
+                    <div>
+                      <Label>Credit Score</Label>
+                      <div className="flex items-center">
+                        <Input value={application?.financialInfo?.creditScore || ''} readOnly />
+                        <div className="ml-3 px-3 py-1 rounded bg-blue-50 text-blue-700 text-sm">
+                          {application?.financialInfo?.creditScoreBand || 'N/A'}
                         </div>
                       </div>
                     </div>
                   </div>
-                  
-                  <Separator />
-                  
+                  <div className="space-y-3">
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Credit Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Credit Score:</span>
-                          <span className="text-sm col-span-2">{application.financialInfo.creditScore}</span>
+                      <Label>Monthly Expenses</Label>
+                      <Input value={application?.financialInfo?.monthlyExpenses || ''} readOnly />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                          <span className="text-sm font-medium">Monthly Expenses:</span>
-                          <span className="text-sm col-span-2">{application.financialInfo.monthlyExpenses}</span>
+                    <div>
+                      <Label>Existing Debts</Label>
+                      <Input value={application?.financialInfo?.existingDebts || ''} readOnly />
                         </div>
+                    <div>
+                      <Label>Other Income Sources</Label>
+                      <Input value={application?.financialInfo?.otherIncomeSources || ''} readOnly />
                       </div>
                     </div>
                   </div>
-                  
-                  <Separator />
-                  
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Risk Assessment</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Existing Loans</h3>
-                    {application.financialInfo.existingLoans.length > 0 ? (
-                      <div className="border rounded-md">
-                        <div className="grid grid-cols-4 gap-2 bg-muted p-2 text-sm font-medium">
-                          <div>Type</div>
-                          <div>Amount</div>
-                          <div>Monthly Payment</div>
-                          <div>Remaining Term</div>
+                      <Label>Risk Level</Label>
+                      <div className="flex items-center">
+                        <Badge className={
+                          application?.riskInfo?.level === 'High' ? 'bg-red-100 text-red-800' :
+                          application?.riskInfo?.level === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-green-100 text-green-800'
+                        }>
+                          {application?.riskInfo?.level || 'Unknown'}
+                        </Badge>
                         </div>
-                        {application.financialInfo.existingLoans.map((loan: any, index: number) => (
-                          <div key={index} className="grid grid-cols-4 gap-2 p-2 text-sm border-t">
-                            <div>{loan.type}</div>
-                            <div>{loan.amount}</div>
-                            <div>{loan.monthlyPayment}</div>
-                            <div>{loan.remainingTerm}</div>
                           </div>
-                        ))}
+                    <div>
+                      <Label>DTI Ratio</Label>
+                      <Input value={application?.riskInfo?.dtiRatio || ''} readOnly />
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No existing loans reported.</p>
-                    )}
                   </div>
-                  
-                  <Separator />
-                  
-                  <div>
-                    <h3 className="text-sm font-medium mb-2">Affordability Analysis</h3>
-                    <div className="rounded-md bg-muted p-4">
                       <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Monthly Income:</span>
-                          <span className="text-sm font-medium">{application.employmentInfo.monthlyIncome}</span>
+                    <div>
+                      <Label>Risk Factors</Label>
+                      <div className="space-y-1">
+                        {application?.riskInfo?.flags && application.riskInfo.flags.length > 0 ? (
+                          application.riskInfo.flags.map((flag, index) => (
+                            <div key={index} className="flex items-center py-1 px-2 bg-red-50 text-red-800 rounded text-sm">
+                              <AlertTriangle size={14} className="mr-2" />
+                              {flag}
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Monthly Expenses:</span>
-                          <span className="text-sm font-medium">{application.financialInfo.monthlyExpenses}</span>
+                          ))
+                        ) : (
+                          <div className="text-green-700 text-sm">No risk factors identified</div>
+                        )}
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Existing Loan Payments:</span>
-                          <span className="text-sm font-medium">
-                            {application.financialInfo.existingLoans.reduce((total: number, loan: any) => 
-                              total + parseInt(loan.monthlyPayment.replace(/\D/g, '')), 0).toLocaleString('en-ZA', { style: 'currency', currency: 'ZAR' })}
-                          </span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Proposed Loan Payment:</span>
-                          <span className="text-sm font-medium">{application.loanDetails.monthlyPayment}</span>
+                    <div>
+                      <Label>Notes</Label>
+                      <Textarea value={application?.riskInfo?.notes || ''} readOnly className="h-20" />
                         </div>
-                        <Separator />
-                        <div className="flex justify-between font-medium">
-                          <span className="text-sm">Disposable Income:</span>
-                          <span className="text-sm">R10,875</span>
-                        </div>
-                        <div className="flex justify-between font-medium">
-                          <span className="text-sm">Debt-to-Income Ratio:</span>
-                          <span className="text-sm">35%</span>
-                        </div>
-                        <div className="mt-2 p-2 rounded bg-green-50 border border-green-100">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle size={16} className="text-green-500" />
-                            <span className="text-sm font-medium text-green-700">Affordability Check: Passed</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -889,100 +860,104 @@ const ApplicationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Loan Details</CardTitle>
-                <CardDescription>Details of the requested loan</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
+              <CardContent className="grid gap-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Loan Purpose:</span>
-                        <span className="text-sm col-span-2">{application.loanDetails.purpose}</span>
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Loan Amount</Label>
+                      <Input value={application?.amount || ''} readOnly />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Requested Amount:</span>
-                        <span className="text-sm col-span-2">{application.loanDetails.requestedAmount}</span>
+                    <div>
+                      <Label>Loan Purpose</Label>
+                      <Input value={application?.loanDetails?.purpose || ''} readOnly />
                       </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Loan Term:</span>
-                        <span className="text-sm col-span-2">{application.loanDetails.term}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Interest Rate:</span>
-                        <span className="text-sm col-span-2">{application.loanDetails.interestRate}</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Monthly Payment:</span>
-                        <span className="text-sm col-span-2">{application.loanDetails.monthlyPayment}</span>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        <span className="text-sm font-medium">Total Repayment:</span>
-                        <span className="text-sm col-span-2">{application.loanDetails.totalRepayment}</span>
+                    <div>
+                      <Label>Term (months)</Label>
+                      <Input value={application?.loanDetails?.term || ''} readOnly />
                       </div>
                     </div>
-                  </div>
-                  
-                  <Separator />
-                  
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Interest Rate</Label>
+                      <Input value={application?.loanDetails?.interestRate || ''} readOnly />
+                      </div>
+                    <div>
+                      <Label>Monthly Payment</Label>
+                      <Input value={application?.loanDetails?.monthlyPayment || ''} readOnly />
+                      </div>
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Loan Summary</h3>
-                    <Card>
-                      <CardContent className="p-4">
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-muted p-4 rounded-md">
-                              <p className="text-sm text-muted-foreground mb-1">Loan Amount</p>
-                              <p className="text-xl font-bold">{application.loanDetails.requestedAmount}</p>
-                            </div>
-                            <div className="bg-muted p-4 rounded-md">
-                              <p className="text-sm text-muted-foreground mb-1">Monthly Payment</p>
-                              <p className="text-xl font-bold">{application.loanDetails.monthlyPayment}</p>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2 mt-2">
-                            <div className="bg-muted p-3 rounded-md">
-                              <p className="text-xs text-muted-foreground mb-1">Term</p>
-                              <p className="text-sm font-semibold">{application.loanDetails.term}</p>
-                            </div>
-                            <div className="bg-muted p-3 rounded-md">
-                              <p className="text-xs text-muted-foreground mb-1">Interest Rate</p>
-                              <p className="text-sm font-semibold">{application.loanDetails.interestRate}</p>
-                            </div>
-                            <div className="bg-muted p-3 rounded-md">
-                              <p className="text-xs text-muted-foreground mb-1">Start Date</p>
-                              <p className="text-sm font-semibold">{application.loanDetails.startDate}</p>
+                      <Label>First Payment Date</Label>
+                      <Input value={application?.loanDetails?.firstPaymentDate || ''} readOnly />
                             </div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
-                  </div>
-                  
-                  <Separator />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Loan Terms</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Payment Schedule</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Payment #</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Principal</TableHead>
+                          <TableHead>Interest</TableHead>
+                          <TableHead>Balance</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {application?.loanDetails?.schedule && application.loanDetails.schedule.length > 0 ? (
+                          application.loanDetails.schedule.slice(0, 5).map((payment, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{payment.number}</TableCell>
+                              <TableCell>{payment.date}</TableCell>
+                              <TableCell>{payment.amount}</TableCell>
+                              <TableCell>{payment.principal}</TableCell>
+                              <TableCell>{payment.interest}</TableCell>
+                              <TableCell>{payment.balance}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center text-muted-foreground">Payment schedule not available</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                    {application?.loanDetails?.schedule && application.loanDetails.schedule.length > 5 && (
+                      <div className="text-center mt-2">
+                        <Button variant="outline" size="sm">View Full Schedule</Button>
+                        </div>
+                    )}
+                        </div>
                   
                   <div>
-                    <h3 className="text-sm font-medium mb-2">Risk Assessment</h3>
-                    <div className="rounded-md bg-muted p-4">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm">Credit Score Risk:</span>
-                          <span className="text-sm font-medium">Medium</span>
+                    <h3 className="text-sm font-medium mb-2">Loan Summary</h3>
+                    <div className="bg-muted rounded-lg p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <div className="text-sm text-muted-foreground">Principal</div>
+                        <div className="font-medium">{application?.amount || 'N/A'}</div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Income Stability:</span>
-                          <span className="text-sm font-medium">High</span>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Total Interest</div>
+                        <div className="font-medium">{application?.loanDetails?.totalInterest || 'N/A'}</div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Debt-to-Income Ratio:</span>
-                          <span className="text-sm font-medium">Medium</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm">Overall Risk:</span>
-                          <span className="text-sm font-medium">Medium</span>
-                        </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">Total Cost</div>
+                        <div className="font-medium">{application?.loanDetails?.totalCost || 'N/A'}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-muted-foreground">APR</div>
+                        <div className="font-medium">{application?.loanDetails?.apr || 'N/A'}</div>
                       </div>
                     </div>
                   </div>
@@ -994,73 +969,83 @@ const ApplicationDetail = () => {
           <TabsContent value="documents" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Documents</CardTitle>
-                <CardDescription>Uploaded documents for verification</CardDescription>
+                <CardTitle>Required Documents</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {application.documents.map((doc: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-md">
-                      <div className="flex items-center gap-2">
-                        <FileText size={20} className="text-primary" />
+                  <ScrollArea className="h-[500px]">
+                    <div className="space-y-3">
+                      {application?.documents && application.documents.length > 0 ? (
+                        application.documents.map((doc, index) => (
+                          <div key={index} className="flex items-start p-3 rounded-lg border">
+                            <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center mr-3">
+                              {getDocumentStatusIcon(doc.verificationStatus || 'pending')}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between">
                         <div>
-                          <p className="font-medium">{doc.name}</p>
-                          <p className="text-xs text-muted-foreground">Uploaded on {doc.date}</p>
+                                  <h4 className="font-medium">{doc.name}</h4>
+                                  <p className="text-sm text-muted-foreground">
+                                    {doc.type} • Uploaded on {doc.dateUploaded}
+                                  </p>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          className={doc.status === "Verified" 
-                            ? "bg-green-100 text-green-800" 
-                            : "bg-amber-100 text-amber-800"
-                          }
-                        >
-                          {doc.status}
-                        </Badge>
                         <div className="flex gap-1">
                           <Button variant="outline" size="icon">
-                            <Eye size={16} />
+                                    <Eye size={14} />
                           </Button>
                           <Button variant="outline" size="icon">
-                            <Download size={16} />
+                                    <Download size={14} />
                           </Button>
-                          {doc.status !== "Verified" && (
-                            <Button 
-                              variant="default" 
-                              size="sm"
-                              onClick={() => handleVerifyDocument(index)}
-                            >
-                              Verify
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="outline" size="icon">
+                                        <MoreVertical size={14} />
                             </Button>
-                          )}
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem>
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        <span>Mark as Verified</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem>
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        <span>Mark as Rejected</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem>
+                                        <MessageSquare className="h-4 w-4 mr-2" />
+                                        <span>Request Resubmission</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem className="text-red-600">
+                                        <Trash className="h-4 w-4 mr-2" />
+                                        <span>Delete</span>
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                         </div>
                       </div>
+                              
+                              {doc.verificationStatus === 'rejected' && (
+                                <div className="mt-2 p-2 bg-red-50 text-red-700 text-sm rounded border border-red-100">
+                                  <span className="font-medium">Rejection reason: </span>
+                                  {doc.notes || 'Document does not meet requirements.'}
                     </div>
-                  ))}
+                              )}
                 </div>
-                
-                <div className="mt-6">
-                  <h3 className="text-sm font-medium mb-2">Document Requirements</h3>
-                  <div className="rounded-md bg-muted p-4">
-                    <ul className="space-y-2 text-sm">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle size={16} className="text-green-500" />
-                        <span>ID Document (Verified)</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle size={16} className="text-green-500" />
-                        <span>Proof of Income (Verified)</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Clock size={16} className="text-amber-500" />
-                        <span>Bank Statements (Pending Verification)</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <XCircle size={16} className="text-gray-300" />
-                        <span className="text-muted-foreground">Proof of Address (Not Required)</span>
-                      </li>
-                    </ul>
                   </div>
+                        ))
+                      ) : (
+                        <div className="text-center p-6 rounded-lg border border-dashed">
+                          <FileX className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                          <h3 className="text-lg font-medium mb-1">No documents uploaded</h3>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            The applicant has not uploaded any documents yet.
+                          </p>
+                          <Button variant="outline">Request Documents</Button>
+                        </div>
+                      )}
+                    </div>
+                  </ScrollArea>
                 </div>
               </CardContent>
             </Card>
@@ -1070,37 +1055,52 @@ const ApplicationDetail = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Status History</CardTitle>
-                <CardDescription>Complete history of application status changes</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="relative pl-6 border-l-2 border-muted space-y-6">
-                  {application.statusHistory.map((history: any, index: number) => (
+                <div className="relative border-l-2 border-muted pl-8 ml-4 space-y-6">
+                  {application?.statusHistory && application.statusHistory.length > 0 ? (
+                    application.statusHistory.map((history, index) => (
                     <div key={index} className="relative mb-4">
                       <div className={`absolute -left-[17px] h-8 w-8 rounded-full flex items-center justify-center ${
-                        history.status === "Approved" ? "bg-green-100" : 
-                        history.status === "Rejected" ? "bg-red-100" : 
+                          history.status === "Approved" || history.status === "approved" ? "bg-green-100" : 
+                          history.status === "Rejected" || history.status === "rejected" ? "bg-red-100" : 
                         "bg-blue-100"
                       }`}>
-                        {history.status === "Approved" ? (
-                          <CheckCircle size={16} className="text-green-500" />
-                        ) : history.status === "Rejected" ? (
-                          <XCircle size={16} className="text-red-500" />
-                        ) : (
-                          <Clock size={16} className="text-blue-500" />
+                          {history.status === "Approved" || history.status === "approved" ? (
+                            <CheckCircle size={16} className="text-green-600" />
+                          ) : history.status === "Rejected" || history.status === "rejected" ? (
+                            <XCircle size={16} className="text-red-600" />
+                          ) : (
+                            <Clock size={16} className="text-blue-600" />
                         )}
                       </div>
-                      <div className="ml-4">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium">{history.status}</h3>
-                          <Badge variant="outline" className="text-xs">
-                            {history.date}
-                          </Badge>
+                        <div>
+                          <h4 className="text-base font-medium flex items-center gap-2">
+                            {history.status}
+                            <span className="text-xs text-muted-foreground font-normal">{history.date}</span>
+                          </h4>
+                          <p className="text-sm text-muted-foreground">{history.comment || 'No comment provided'}</p>
+                          {history.user && typeof history.user === 'object' && history.user.name ? (
+                            <div className="mt-2 flex items-center">
+                              <Avatar className="h-6 w-6 mr-2">
+                                <AvatarFallback>{history.user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs">By {history.user.name}</span>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-1">{history.notes}</p>
-                        <p className="text-xs text-muted-foreground">Updated by: {history.user}</p>
+                          ) : history.user && typeof history.user === 'string' ? (
+                            <div className="mt-2 flex items-center">
+                              <Avatar className="h-6 w-6 mr-2">
+                                <AvatarFallback>{history.user.slice(0, 2).toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <span className="text-xs">By {history.user}</span>
                       </div>
+                          ) : null}
                     </div>
-                  ))}
+                    </div>
+                    ))
+                  ) : (
+                    <div className="py-4 text-center text-muted-foreground">No status history available</div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1119,37 +1119,37 @@ const ApplicationDetail = () => {
           <div className="space-y-4 mt-2">
             <div className="flex justify-between">
               <Badge variant="outline" className="px-3 py-1">
-                {application.id}
+                {application?.id || ''}
               </Badge>
               <Badge className={statusDisplay.color}>
                 <div className="flex items-center gap-1">
                   {statusDisplay.icon}
-                  <span>{application.status}</span>
+                  <span>{application?.status || 'Unknown'}</span>
                 </div>
               </Badge>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-muted-foreground">Applicant</h4>
-              <p className="text-base font-medium">{application.name}</p>
+              <p className="text-base font-medium">{application?.name || 'Unknown'}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-muted-foreground">Current Stage</h4>
-              <p className="text-base">{application.status}</p>
+              <p className="text-base">{application?.status || 'Not specified'}</p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-muted-foreground">Required Action</h4>
               <p className="text-sm bg-amber-50 p-2 rounded border border-amber-100 my-2">
-                {application.requiredAction}
+                {application?.requiredAction || 'No action required'}
               </p>
             </div>
             
             <div>
               <h4 className="text-sm font-medium text-muted-foreground mb-2">Change Status</h4>
               <div className="grid grid-cols-2 gap-2">
-                {application.status !== "Initial Screening" && (
+                {application?.status !== "Initial Screening" && (
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -1161,7 +1161,7 @@ const ApplicationDetail = () => {
                   </Button>
                 )}
                 
-                {application.status !== "Document Review" && (
+                {application?.status !== "Document Review" && (
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -1173,7 +1173,7 @@ const ApplicationDetail = () => {
                   </Button>
                 )}
                 
-                {application.status !== "Credit Assessment" && (
+                {application?.status !== "Credit Assessment" && (
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -1185,7 +1185,7 @@ const ApplicationDetail = () => {
                   </Button>
                 )}
                 
-                {application.status !== "Income Verification" && (
+                {application?.status !== "Income Verification" && (
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -1197,7 +1197,7 @@ const ApplicationDetail = () => {
                   </Button>
                 )}
                 
-                {application.status !== "Final Decision" && (
+                {application?.status !== "Final Decision" && (
                   <Button 
                     variant="outline" 
                     size="sm"

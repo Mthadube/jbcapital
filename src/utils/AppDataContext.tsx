@@ -1,7 +1,33 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { toast } from 'sonner';
 import * as api from './api';
-import { jwtDecode } from 'jwt-decode';
+import { v4 as uuidv4 } from 'uuid';
+import { ApplicationStatus } from "@/components/admin/ApplicationProcessing";
+
+// Mock data variables for data generation
+const firstNames = [
+  "James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles",
+  "Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen"
+];
+
+const lastNames = [
+  "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor",
+  "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Garcia", "Martinez", "Robinson"
+];
+
+const streets = [
+  "Main Street", "Oak Avenue", "Maple Drive", "Cedar Lane", "Pine Road", "Elm Street", "Washington Avenue",
+  "Park Place", "Lake View", "River Road", "Highland Avenue", "Valley Drive", "Forest Lane", "Meadow Lane"
+];
+
+const cities = [
+  "New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego",
+  "Dallas", "San Jose", "Austin", "Jacksonville", "Fort Worth", "Columbus", "San Francisco", "Charlotte"
+];
+
+const states = [
+  "NY", "CA", "IL", "TX", "AZ", "PA", "GA", "FL", "NC", "OH", "MI", "TN", "VA", "WA", "MA", "CO"
+];
 
 // Define interfaces for our data models
 export interface User {
@@ -53,9 +79,8 @@ export interface User {
   role?: string;
   documents: Document[];
   loans: Loan[];
-  passwordLastChanged?: string;
-  recoveryEmail?: string;
-  recoveryPhone?: string;
+  notifications?: Notification[];
+  recentActivity?: Activity[];
 }
 
 export interface Loan {
@@ -94,6 +119,7 @@ export interface Document {
   fileType?: string;
   expiryDate?: string;
   notes?: string;
+  filePath?: string;
 }
 
 export interface ProcessingStep {
@@ -105,101 +131,68 @@ export interface ProcessingStep {
   processedBy?: string;
 }
 
+// Define StatusHistoryItem interface
+export interface StatusHistoryItem {
+  status: string;
+  date: string;
+  user: string;
+  notes?: string;
+}
+
 export interface Application {
   id: string;
   userId: string;
-  status: string;
-  submittedAt: string;
-  email: string;
-  phone: string;
-  idNumber: string;
-  dob: string;
-  notes?: string;
-  completion: number;
+  status: ApplicationStatus;
+  date: string;
+  amount: string;
+  completion?: number;
   requiredAction?: string;
-  
-  // Loan information
-  loanInfo?: {
-    amount: number;
-    term: number;
+  statusHistory?: StatusHistoryItem[];
+  loanDetails?: {
     purpose?: string;
+    term?: number;
+    monthlyPayment?: string;
     interestRate?: number;
-    monthlyPayment?: number;
-  };
-  
-  // Personal information
-  personalInfo?: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    gender?: string;
-    maritalStatus?: string;
-    dependents?: number;
-    address?: string;
-    province?: string;
-    postalCode?: string;
-  };
-  
-  // Employment information
-  employmentInfo?: {
-    employmentStatus?: string;
-    employmentType?: string;
-    employer: string;
-    position?: string;
-    jobTitle?: string;
-    yearsAtCurrentEmployer: number;
-    employmentLength?: string;
-    monthlyIncome: number;
-    paymentDate?: string;
-  };
-  
-  // Financial information
-  financialInfo?: {
-    bankName?: string;
-    accountType?: string;
-    accountNumber?: string;
-    creditScore: number;
-    debtToIncomeRatio: number;
-    monthlyExpenses: number;
-    bankruptcies?: boolean;
-    foreclosures?: boolean;
-    existingLoans?: Array<{
-      type: string;
-      amount: string;
-      remaining: string;
-    }>;
-    monthlyDebt?: string;
   };
 }
 
 // Define Notification interface
 export interface Notification {
   id: string;
-  userId?: string;
+  userId: string;
   title: string;
   message: string;
   type: string;
   date: string;
   read: boolean;
-  link?: string;
-  data?: Record<string, unknown>;
-  importance: 'high' | 'medium' | 'low';
 }
 
-// Define a Token interface
-interface AuthToken {
-  token: string;
-  expiresAt: number;
+export interface Activity {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  type: string;
+  amount?: number;
+  date: string;
 }
 
-// Define a decoded token interface
-interface DecodedToken {
-  id?: string;
-  userId?: string;
-  email: string;
-  role: string;
-  exp: number;
+// Add Contract interface after the other interfaces
+export interface Contract {
+  id: string;
+  loanId: string;
+  userId: string;
+  documentId?: string;
+  status: 'draft' | 'sent' | 'viewed' | 'signed' | 'completed' | 'expired' | 'declined';
+  dateCreated: string;
+  dateSent?: string;
+  dateViewed?: string;
+  dateSigned?: string;
+  dateExpires?: string;
+  signatureRequestId?: string;
+  signatureUrl?: string;
+  downloadUrl?: string;
+  notes?: string;
 }
 
 interface AppDataContextType {
@@ -207,6 +200,7 @@ interface AppDataContextType {
   loans: Loan[];
   documents: Document[];
   applications: Application[];
+  contracts: Contract[];
   
   // Loading states
   isLoading: boolean;
@@ -228,6 +222,7 @@ interface AppDataContextType {
   addDocument: (document: Document) => Promise<boolean>;
   updateDocument: (id: string, data: Partial<Document>) => Promise<boolean>;
   getDocumentsByUserId: (userId: string) => Document[];
+  viewDocument: (documentId: string) => string | null;
   
   // Application management
   addApplication: (application: Application) => Promise<boolean>;
@@ -273,9 +268,14 @@ interface AppDataContextType {
     soundVolume: number;
   }>) => void;
   
-  // Auth related
-  isAuthenticated: boolean;
-  checkAuth: () => Promise<boolean>;
+  // Contract management
+  addContract: (contract: Contract) => Promise<boolean>;
+  updateContract: (id: string, data: Partial<Contract>) => Promise<boolean>;
+  getContractById: (id: string) => Contract | undefined;
+  getContractsByUserId: (userId: string) => Contract[];
+  getContractsByLoanId: (loanId: string) => Contract[];
+  generateContract: (loanId: string) => Promise<Contract | null>;
+  sendContractForSignature: (contractId: string, recipientEmail: string) => Promise<boolean>;
 }
 
 // Create the context
@@ -288,9 +288,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [contracts, setContracts] = useState<Contract[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [authToken, setAuthToken] = useState<AuthToken | null>(null);
   
   // Loading states
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -319,52 +318,49 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     setIsError(false);
     
     try {
-      // Check API health
-      const healthCheck = await api.checkHealth();
-      if (!healthCheck.success) {
-        console.error("API health check failed. Using mock data.");
-        setUsers(generateMockData().users);
-        setLoans(generateMockData().loans);
-        setDocuments(generateMockData().documents);
-        setApplications(generateMockData().applications);
-        setIsLoading(false);
-        return;
-      }
-      
       // Fetch users
       const usersResponse = await api.fetchUsers();
       if (usersResponse.success && usersResponse.data) {
         setUsers(usersResponse.data);
+      } else {
+        console.error("Failed to fetch users:", usersResponse.error);
       }
       
       // Fetch loans
       const loansResponse = await api.fetchLoans();
       if (loansResponse.success && loansResponse.data) {
+        console.log("Fetched loans data:", loansResponse.data);
         setLoans(loansResponse.data);
+      } else {
+        console.error("Failed to fetch loans:", loansResponse.error);
       }
       
       // Fetch documents
       const documentsResponse = await api.fetchDocuments();
       if (documentsResponse.success && documentsResponse.data) {
         setDocuments(documentsResponse.data);
+      } else {
+        console.error("Failed to fetch documents:", documentsResponse.error);
       }
       
       // Fetch applications
       const applicationsResponse = await api.fetchApplications();
       if (applicationsResponse.success && applicationsResponse.data) {
         setApplications(applicationsResponse.data);
+      } else {
+        console.error("Failed to fetch applications:", applicationsResponse.error);
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error fetching data:", errorMessage);
-      setIsError(true);
       
-      // Fallback to mock data if API fails
-      const mockData = generateMockData();
-      setUsers(mockData.users);
-      setLoans(mockData.loans);
-      setDocuments(mockData.documents);
-      setApplications(mockData.applications);
+      // Fetch contracts
+      const contractsResponse = await api.fetchContracts();
+      if (contractsResponse.success && contractsResponse.data) {
+        setContracts(contractsResponse.data);
+      } else {
+        console.error("Failed to fetch contracts:", contractsResponse.error);
+      }
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setIsError(true);
     } finally {
       setIsLoading(false);
     }
@@ -384,17 +380,35 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Migration failed: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Migration error:", errorMessage);
+    } catch (error) {
+      console.error("Migration error:", error);
       toast.error("Migration failed due to an error");
       return false;
     }
   };
   
   // Refresh all data
-  const refreshData = async () => {
-    await fetchAllData();
+  const refreshData = async (): Promise<void> => {
+    try {
+      console.log("Refreshing all data...");
+      await fetchAllData();
+      console.log("Data refresh complete.");
+      
+      // Log the current state after refresh (won't show updated state due to React's async state updates)
+      setTimeout(() => {
+        console.log("Current state after refresh:", {
+          users: users.length,
+          loans: loans.length,
+          documents: documents.length,
+          applications: applications.length,
+          contracts: contracts.length
+        });
+      }, 100);
+      
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error("Failed to refresh data");
+    }
   };
   
   // User management functions
@@ -409,9 +423,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Failed to add user: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error adding user:", errorMessage);
+    } catch (error) {
+      console.error("Error adding user:", error);
       return false;
     }
   };
@@ -426,7 +439,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         ));
         
         // Update current user if it's the same
-        if (currentUser && currentUser.id === id) {
+    if (currentUser && currentUser.id === id) {
           setCurrentUser({ ...currentUser, ...response.data } as User);
         }
         
@@ -435,9 +448,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Failed to update user: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error updating user:", errorMessage);
+    } catch (error) {
+      console.error("Error updating user:", error);
       return false;
     }
   };
@@ -458,9 +470,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Failed to add loan: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error adding loan:", errorMessage);
+    } catch (error) {
+      console.error("Error adding loan:", error);
       return false;
     }
   };
@@ -478,9 +489,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Failed to update loan: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error updating loan:", errorMessage);
+    } catch (error) {
+      console.error("Error updating loan:", error);
       return false;
     }
   };
@@ -501,9 +511,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Failed to add document: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error adding document:", errorMessage);
+    } catch (error) {
+      console.error("Error adding document:", error);
       return false;
     }
   };
@@ -521,14 +530,55 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Failed to update document: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error updating document:", errorMessage);
+    } catch (error) {
+      console.error("Error updating document:", error);
       return false;
     }
   };
   
-  const getDocumentsByUserId = (userId: string) => documents.filter(document => document.userId === userId);
+  const getDocumentsByUserId = (userId: string) => documents.filter(doc => doc.userId === userId);
+  
+  const viewDocument = (documentId: string): string | null => {
+    const document = documents.find(doc => doc.id === documentId);
+    if (!document) {
+      console.error("Document not found:", documentId);
+      return null;
+    }
+    
+    console.log("viewDocument called for:", document.name, "filePath:", document.filePath);
+    
+    // For uploaded documents with a filePath
+    if (document.filePath) {
+      // If path already starts with http(s), use as is
+      if (document.filePath.startsWith('http')) {
+        return document.filePath;
+      }
+      
+      // If filePath already starts with a slash, it's relative to server root
+      if (document.filePath.startsWith('/')) {
+        return document.filePath;
+      }
+      
+      // Otherwise, add a leading slash
+      return `/${document.filePath}`;
+    }
+    
+    // For mock or demo data, provide fallbacks based on document type and name
+    const documentType = document.type.toLowerCase();
+    const fileName = document.name.toLowerCase();
+    
+    // Determine file type from extension or type
+    if (fileName.endsWith('.pdf') || documentType.includes('pdf') || 
+        documentType === 'id' || documentType === 'bank_statement') {
+      return '/documents/sample-pdf.pdf';
+    } else if (fileName.match(/\.(jpg|jpeg|png|gif)$/i) || 
+              documentType.includes('image') || documentType === 'proof_of_residence') {
+      return '/documents/sample-image.jpg';
+    }
+    
+    // Final fallback - SVG placeholder
+    return '/documents/placeholder.svg';
+  };
   
   // Application management functions
   const addApplication = async (application: Application): Promise<boolean> => {
@@ -542,29 +592,52 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         toast.error(`Failed to add application: ${response.error}`);
         return false;
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error adding application:", errorMessage);
+    } catch (error) {
+      console.error("Error adding application:", error);
       return false;
     }
   };
   
-  const updateApplication = async (id: string, data: Partial<Application>): Promise<boolean> => {
+  const updateApplication = async (applicationId: string, updatedData: Partial<Application>) => {
     try {
-      const response = await api.updateApplication(id, data);
+      const response = await api.updateApplication(applicationId, updatedData);
       
-      if (response.success && response.data) {
-        setApplications(prevApplications => prevApplications.map(application => 
-          application.id === id ? { ...application, ...response.data } as Application : application
-        ));
+      if (response.success) {
+        // Track status change if status is being updated
+        if (updatedData.status) {
+          const application = applications.find(app => app.id === applicationId);
+          if (application && application.status !== updatedData.status) {
+            handleApplicationStatusChange(application, updatedData.status);
+          }
+        }
+
+        const updatedApplications = applications.map(app => 
+          app.id === applicationId ? { ...app, ...updatedData } : app
+        );
+        
+        setApplications(updatedApplications);
+        
+        toast({
+          title: "Application updated",
+          description: "Application has been successfully updated",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
+        
         return true;
       } else {
-        toast.error(`Failed to update application: ${response.error}`);
-        return false;
+        throw new Error("Failed to update application");
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Error updating application:", errorMessage);
+    } catch (error) {
+      console.error("Error updating application:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update application",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
       return false;
     }
   };
@@ -573,215 +646,94 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
   
   const getApplicationsByUserId = (userId: string) => applications.filter(application => application.userId === userId);
   
-  // Check if token is valid
-  const isTokenValid = (token: AuthToken | null): boolean => {
-    if (!token) return false;
-    return Date.now() < token.expiresAt;
-  };
-
-  // Get token from storage and validate
-  const getStoredToken = (): AuthToken | null => {
-    const storedToken = localStorage.getItem('authToken');
-    if (!storedToken) return null;
-    
-    try {
-      const parsedToken = JSON.parse(storedToken) as AuthToken;
-      return isTokenValid(parsedToken) ? parsedToken : null;
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('Error parsing stored token:', errorMessage);
-      localStorage.removeItem('authToken');
-      return null;
-    }
-  };
-
-  // Set token with expiry
-  const setTokenWithExpiry = (token: string) => {
-    try {
-      // For our mock token, manually decode it
-      if (token.endsWith('mock_signature')) {
-        // Parse the middle part (payload) of the token
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-          throw new Error('Invalid token format');
-        }
-        
-        const payload = parts[1];
-        let decoded;
-        
-        try {
-          // First try using jwt-decode library
-          decoded = jwtDecode<DecodedToken>(token);
-        } catch (e) {
-          // Fall back to manual decoding
-          decoded = JSON.parse(atob(payload)) as DecodedToken;
-        }
-        
-        const expiresAt = decoded.exp * 1000; // Convert to milliseconds
-        
-        const tokenData: AuthToken = {
-          token,
-          expiresAt
-        };
-        
-        localStorage.setItem('authToken', JSON.stringify(tokenData));
-        setAuthToken(tokenData);
-        return decoded;
-      } else {
-        // For real tokens from the server, use the jwt-decode library
-        const decoded = jwtDecode<DecodedToken>(token);
-        const expiresAt = decoded.exp * 1000; // Convert to milliseconds
-        
-        const tokenData: AuthToken = {
-          token,
-          expiresAt
-        };
-        
-        localStorage.setItem('authToken', JSON.stringify(tokenData));
-        setAuthToken(tokenData);
-        return decoded;
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('Invalid token:', errorMessage);
-      return null;
-    }
-  };
-
-  // Check authentication status
-  const checkAuth = async (): Promise<boolean> => {
-    const token = getStoredToken();
-    
-    if (!token) {
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      return false;
-    }
-    
-    try {
-      // Validate token with server
-      const response = await api.validateToken(token.token);
-      
-      if (response.success && response.data) {
-        // If token is valid, set the user data from the response 
-        const userData = response.data;
-        setCurrentUser(userData);
-        setIsAuthenticated(true);
-        return true;
-      } else {
-        // If token is invalid, clear authentication
-        localStorage.removeItem('authToken');
-        setAuthToken(null);
-        setCurrentUser(null);
-        setIsAuthenticated(false);
-        return false;
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('Auth check error:', errorMessage);
-      // If token validation fails, clear authentication data
-      localStorage.removeItem('authToken');
-      setAuthToken(null);
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      return false;
-    }
-  };
-
-  // Login function with token handling
+  // Authentication functions
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      setIsLoading(true);
-      
-      // Check if admin login
-      if (email === 'admin@jbcapital.com' && password === 'admin123') {
-        const adminUser = users.find(user => user.email === 'admin@jbcapital.com');
+      // Check if this is the admin login
+      if (email.toLowerCase() === 'admin@jbcapital.com') {
+        // For admin, verify with the hardcoded password (in real app, this would be different)
+        if (password !== 'admin123') {
+          toast.error("Invalid admin password");
+          return false;
+        }
         
-        if (adminUser) {
-          // Hard-coded token with very long expiry
-          const mockToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkFETS0wMDEiLCJlbWFpbCI6ImFkbWluQGpiY2FwaXRhbC5jb20iLCJyb2xlIjoiYWRtaW4iLCJleHAiOjMxNTM2MDAwMDB9.signature";
-          
-          // Store token with its expiry
-          localStorage.setItem('authToken', JSON.stringify({
-            token: mockToken,
-            expiresAt: 3153600000000 // Far future
-          }));
-          
-          setAuthToken({
-            token: mockToken,
-            expiresAt: 3153600000000
-          });
-          
+        // Fetch the admin user from database
+        const response = await api.fetchUserByEmail(email);
+        
+        if (response.success && response.data) {
+          const user = response.data as User;
           // Update last login time
           const now = new Date().toISOString();
-          await updateUser(adminUser.id, { lastLogin: now });
+          await updateUser(user.id, { lastLogin: now });
           
-          setCurrentUser(adminUser);
-          setIsAuthenticated(true);
-          toast.success("Logged in as admin");
-          setIsLoading(false);
+          setCurrentUser(user);
+          
+          // Update local storage 
+          localStorage.setItem('currentUser', JSON.stringify(user));
           return true;
+        } else {
+          // If admin not found in database, the server should have created it
+          // Try to refresh the user data
+          await refreshData();
+          
+          // Try fetching admin again
+          const retryResponse = await api.fetchUserByEmail(email);
+          if (retryResponse.success && retryResponse.data) {
+            const user = retryResponse.data as User;
+            setCurrentUser(user);
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            return true;
+          }
+          
+          toast.error("Admin user not found in database. Please restart the server.");
+          return false;
         }
       }
       
       // For regular users
-      const response = await api.login(email, password);
+      const response = await api.fetchUserByEmail(email);
       
       if (response.success && response.data) {
-        // Store the token
-        const { token, user } = response.data;
-        const decoded = setTokenWithExpiry(token);
-        
-        if (!decoded) {
-          toast.error("Invalid authentication token");
-          setIsLoading(false);
-          return false;
-        }
-        
+        const user = response.data as User;
         // Update last login time
         const now = new Date().toISOString();
         await updateUser(user.id, { lastLogin: now });
+      
+      setCurrentUser(user);
         
-        setCurrentUser(user);
-        setIsAuthenticated(true);
-        toast.success("Login successful");
-        setIsLoading(false);
-        return true;
+        // Update local storage 
+        localStorage.setItem('currentUser', JSON.stringify(user));
+      return true;
       } else {
-        toast.error(response.error || "Invalid email or password");
-        setIsLoading(false);
+        toast.error("Invalid email or password");
         return false;
-      }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error("Login error:", errorMessage);
+    }
+    } catch (error) {
+      console.error("Login error:", error);
       toast.error("Login failed");
-      setIsLoading(false);
-      return false;
+    return false;
     }
   };
   
-  // Log out function
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('currentUser');
-    setAuthToken(null);
     setCurrentUser(null);
-    setIsAuthenticated(false);
-    toast.info("Logged out successfully");
+    localStorage.removeItem('currentUser');
   };
 
-  // Initial authentication check on load
+  // Load data on initial render
   useEffect(() => {
-    const initAuth = async () => {
-      setIsLoading(true);
-      await checkAuth();
-      setIsLoading(false);
-    };
+    fetchAllData();
     
-    initAuth();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    // We intentionally want this to run only once on mount
+    // Check for saved user in localStorage
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error("Error parsing saved user:", error);
+        localStorage.removeItem('currentUser');
+      }
+    }
   }, []);
 
   // Load notification settings from localStorage
@@ -790,9 +742,8 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     if (savedSettings) {
       try {
         setNotificationSettings(JSON.parse(savedSettings));
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        console.error('Error parsing notification settings:', errorMessage);
+      } catch (error) {
+        console.error('Error parsing notification settings:', error);
       }
     }
   }, []);
@@ -819,11 +770,30 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     // Show toast notification
     toast(notification.title, {
       description: notification.message,
-      action: notification.link ? {
-        label: "View",
-        onClick: () => window.location.href = notification.link || '#',
-      } : undefined,
     });
+    
+    // If this notification is for a specific user, also update their user record
+    if (notification.userId) {
+      const user = users.find(u => u.id === notification.userId);
+      if (user) {
+        // Create updated user with notifications added
+        const updatedUser = {
+          ...user,
+          notifications: [notification, ...(user.notifications || [])]
+        };
+        
+        // Update users array
+        setUsers(prev => prev.map(u => u.id === notification.userId ? updatedUser : u));
+        
+        // Also update currentUser if it's the same user
+        if (currentUser && currentUser.id === notification.userId) {
+          setCurrentUser({
+            ...currentUser,
+            notifications: [notification, ...(currentUser.notifications || [])]
+          });
+        }
+      }
+    }
   };
   
   const markNotificationAsRead = (id: string) => {
@@ -884,7 +854,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     }
     
     sound.volume = notificationSettings.soundVolume;
-    sound.play().catch((err: Error) => console.error('Error playing notification sound:', err.message));
+    sound.play().catch(err => console.error('Error playing notification sound:', err));
   };
   
   // Function to show browser notification
@@ -910,12 +880,261 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
+  // Add a recent activity to a user's profile
+  const addUserActivity = (userId: string, activityData: Activity) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+
+    const recentActivity = user.recentActivity || [];
+    const updatedRecentActivity = [activityData, ...recentActivity.slice(0, 9)]; // Keep only last 10 activities
+
+    // Create updated user with activity added
+    const updatedUser = {
+      ...user,
+      recentActivity: updatedRecentActivity
+    };
+    
+    // Update users array
+    setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u));
+    
+    // Also update currentUser if it's the same user
+    if (currentUser && currentUser.id === userId) {
+      setCurrentUser({
+        ...currentUser,
+        recentActivity: updatedRecentActivity
+      });
+    }
+  };
+  
+  // Handle all notifications and activities for loan application status change
+  const handleApplicationStatusChange = (application: Application, newStatus: string) => {
+    // Map status to user-friendly display names
+    const statusDisplay: Record<string, string> = {
+      submitted: "Application Submitted",
+      pending: "Application Pending",
+      in_review: "Application Under Review",
+      approved: "Application Approved",
+      rejected: "Application Rejected",
+      funded: "Funds Disbursed"
+    };
+
+    const notificationTitle = statusDisplay[newStatus] || `Application Status: ${newStatus}`;
+    let notificationMessage = "";
+
+    switch(newStatus) {
+      case "approved":
+        notificationMessage = "Congratulations! Your loan application has been approved.";
+        break;
+      case "rejected":
+        notificationMessage = "We regret to inform you that your loan application was not approved.";
+        break;
+      case "in_review":
+        notificationMessage = "Your application is now being reviewed by our team.";
+        break;
+      case "funded":
+        notificationMessage = `Funds of $${application.amount?.toString()} have been disbursed to your account.`;
+        break;
+      default:
+        notificationMessage = `Your application status has been updated to ${newStatus}.`;
+    }
+
+    // Add notification
+    const newNotification = {
+      id: uuidv4(),
+      userId: application.userId,
+      title: notificationTitle,
+      message: notificationMessage,
+      type: "application_update",
+      date: new Date().toISOString(),
+      read: false
+    };
+    
+    addNotification(newNotification);
+
+    // Add activity
+    addUserActivity(application.userId, {
+      id: uuidv4(),
+      userId: application.userId,
+      title: notificationTitle,
+      description: notificationMessage,
+      type: "loan_update",
+      amount: typeof application.amount === 'number' ? application.amount : 0,
+      date: new Date().toISOString()
+    });
+  };
+  
+  // Contract management functions
+  const addContract = async (contract: Contract): Promise<boolean> => {
+    try {
+      const response = await api.createContract(contract);
+      
+      if (response.success && response.data) {
+        setContracts(prevContracts => [...prevContracts, response.data as Contract]);
+        return true;
+      } else {
+        toast.error(`Failed to add contract: ${response.error}`);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error adding contract:", error);
+      return false;
+    }
+  };
+  
+  const updateContract = async (id: string, data: Partial<Contract>): Promise<boolean> => {
+    try {
+      const response = await api.updateContract(id, data);
+      
+      if (response.success && response.data) {
+        setContracts(prevContracts => prevContracts.map(contract => 
+          contract.id === id ? { ...contract, ...response.data } as Contract : contract
+        ));
+        return true;
+      } else {
+        toast.error(`Failed to update contract: ${response.error}`);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error updating contract:", error);
+      return false;
+    }
+  };
+  
+  const getContractById = (id: string) => contracts.find(contract => contract.id === id);
+  
+  const getContractsByUserId = (userId: string) => contracts.filter(contract => contract.userId === userId);
+  
+  const getContractsByLoanId = (loanId: string) => contracts.filter(contract => contract.loanId === loanId);
+  
+  const generateContract = async (loanId: string): Promise<Contract | null> => {
+    try {
+      const loan = loans.find(loan => loan.id === loanId);
+      if (!loan) {
+        toast.error("Loan not found");
+        return null;
+      }
+      
+      const user = users.find(user => user.id === loan.userId);
+      if (!user) {
+        toast.error("User not found");
+        return null;
+      }
+      
+      // Call API to generate the contract
+      const response = await api.generateLoanContract(loanId);
+      
+      if (!response.success || !response.data) {
+        toast.error(`Failed to generate contract: ${response.error || "Unknown error"}`);
+        return null;
+      }
+      
+      // Create a document for the contract
+      const contractDocument: Document = {
+        id: generateId(),
+        userId: loan.userId,
+        name: `Loan Agreement - ${loan.id}`,
+        type: 'loan_contract',
+        dateUploaded: new Date().toISOString(),
+        verificationStatus: 'verified',
+        fileType: 'application/pdf',
+        filePath: response.data.downloadUrl,
+        notes: 'Automatically generated loan contract'
+      };
+      
+      const documentAdded = await addDocument(contractDocument);
+      
+      if (!documentAdded) {
+        toast.error("Failed to save contract document");
+        return null;
+      }
+      
+      // Create the contract record
+      const newContract: Contract = {
+        id: response.data.contractId,
+        loanId: loanId,
+        userId: loan.userId,
+        documentId: contractDocument.id,
+        status: 'draft',
+        dateCreated: new Date().toISOString(),
+        downloadUrl: response.data.downloadUrl
+      };
+      
+      const contractAdded = await addContract(newContract);
+      
+      if (!contractAdded) {
+        toast.error("Failed to save contract record");
+        return null;
+      }
+      
+      toast.success("Loan contract generated successfully");
+      return newContract;
+    } catch (error) {
+      console.error("Error generating contract:", error);
+      toast.error("An error occurred while generating the contract");
+      return null;
+    }
+  };
+  
+  const sendContractForSignature = async (contractId: string, recipientEmail: string): Promise<boolean> => {
+    try {
+      const contract = contracts.find(c => c.id === contractId);
+      if (!contract) {
+        toast.error("Contract not found");
+        return false;
+      }
+      
+      // Call API to send the contract for signature
+      const response = await api.sendContractForSignature(contractId, recipientEmail);
+      
+      if (!response.success || !response.data) {
+        toast.error(`Failed to send contract: ${response.error || "Unknown error"}`);
+        return false;
+      }
+      
+      // Update the contract record
+      const updated = await updateContract(contractId, {
+        status: 'sent',
+        dateSent: new Date().toISOString(),
+        signatureRequestId: response.data.signatureRequestId,
+        signatureUrl: response.data.signatureUrl
+      });
+      
+      if (updated) {
+        toast.success("Contract sent for signature");
+        
+        // Add a notification for the user
+        const user = users.find(u => u.id === contract.userId);
+        if (user) {
+          addNotification({
+            id: generateId(),
+            userId: user.id,
+            title: 'Loan Contract Ready for Signature',
+            message: 'Your loan contract is ready for electronic signature. Please check your email.',
+            type: 'document',
+            date: new Date().toISOString(),
+            read: false
+          });
+        }
+        
+        return true;
+      } else {
+        toast.error("Failed to update contract status");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error sending contract for signature:", error);
+      toast.error("An error occurred while sending the contract");
+      return false;
+    }
+  };
+  
   // Context value
   const value: AppDataContextType = {
     users,
     loans,
     documents,
     applications,
+    contracts,
     isLoading,
     isError,
     addUser,
@@ -929,6 +1148,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     addDocument,
     updateDocument,
     getDocumentsByUserId,
+    viewDocument,
     addApplication,
     updateApplication,
     getApplicationById,
@@ -949,10 +1169,15 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
     getNotificationsByUserId,
     notificationSettings,
     updateNotificationSettings,
-    isAuthenticated,
-    checkAuth
+    addContract,
+    updateContract,
+    getContractById,
+    getContractsByUserId,
+    getContractsByLoanId,
+    generateContract,
+    sendContractForSignature
   };
-
+  
   return (
     <AppDataContext.Provider value={value}>
       {children}
@@ -971,65 +1196,257 @@ export const useAppData = () => {
 
 // Mock data generator
 const generateMockData = () => {
-  // Sample users
-  const sampleUsers: User[] = [
+  // Generate mock users
+  const mockUsers: User[] = Array(15).fill(null).map((_, index) => ({
+    id: `user-${index + 1}`,
+    firstName: firstNames[Math.floor(Math.random() * firstNames.length)],
+    lastName: lastNames[Math.floor(Math.random() * lastNames.length)],
+    email: `user${index + 1}@example.com`,
+    phone: `555-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+    address: `${Math.floor(Math.random() * 9000) + 1000} ${streets[Math.floor(Math.random() * streets.length)]}, ${cities[Math.floor(Math.random() * cities.length)]}, ${states[Math.floor(Math.random() * states.length)]} ${Math.floor(Math.random() * 90000) + 10000}`,
+    dateOfBirth: `${1950 + Math.floor(Math.random() * 40)}-${Math.floor(Math.random() * 12) + 1}-${Math.floor(Math.random() * 28) + 1}`,
+    ssn: `${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 90) + 10}-${Math.floor(Math.random() * 9000) + 1000}`,
+    password: 'password123',
+    role: index === 0 ? 'admin' : 'user',
+    createdAt: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString(),
+    lastLogin: new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString(),
+    activities: [],
+    notifications: [],
+    profileCompletionPercentage: Math.floor(Math.random() * 100),
+    documents: []
+  }));
+
+  // Generate mock loans
+  const mockLoans: Loan[] = [];
+  
+  // Loan purposes
+  const loanPurposes = [
+    "Home Improvement", 
+    "Debt Consolidation", 
+    "Education", 
+    "Medical Expenses", 
+    "Business", 
+    "Vehicle Purchase", 
+    "Wedding", 
+    "Travel", 
+    "Emergency"
+  ];
+  
+  // Loan types
+  const loanTypes = [
+    "Personal Loan", 
+    "Business Loan", 
+    "Student Loan", 
+    "Short-term Loan", 
+    "Line of Credit"
+  ];
+  
+  // Generate 20 loans
+  for (let i = 0; i < 20; i++) {
+    const userId = mockUsers[Math.floor(Math.random() * mockUsers.length)].id;
+    const amount = Math.floor(Math.random() * 100000) + 5000; // Random amount between 5,000 and 105,000
+    const interestRate = (Math.random() * 20) + 5; // Random interest rate between 5% and 25%
+    const term = [6, 12, 24, 36, 48, 60][Math.floor(Math.random() * 6)]; // Random term in months
+    
+    // Calculate monthly payment (simplified)
+    const monthlyInterestRate = interestRate / 1200; // Convert annual rate to monthly decimal
+    const monthlyPayment = amount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, term)) / (Math.pow(1 + monthlyInterestRate, term) - 1);
+    
+    // Total repayment
+    const totalRepayment = monthlyPayment * term;
+    
+    // Random status
+    const statusOptions: ('active' | 'pending' | 'completed' | 'rejected' | 'approved')[] = ['active', 'pending', 'completed', 'rejected', 'approved'];
+    const status = statusOptions[Math.floor(Math.random() * statusOptions.length)];
+    
+    // Random dates
+    const dateApplied = new Date();
+    dateApplied.setDate(dateApplied.getDate() - Math.floor(Math.random() * 180)); // Random date within last 180 days
+    
+    const dateIssued = new Date(dateApplied);
+    if (status !== 'pending' && status !== 'rejected') {
+      dateIssued.setDate(dateIssued.getDate() + Math.floor(Math.random() * 14) + 1); // 1-14 days after application
+    }
+    
+    // For active loans, calculate payments made
+    let paidMonths = 0;
+    let paidAmount = 0;
+    let nextPaymentDue = null;
+    
+    if (status === 'active') {
+      paidMonths = Math.floor(Math.random() * term);
+      paidAmount = Math.round(paidMonths * monthlyPayment);
+      
+      const nextPaymentDate = new Date();
+      nextPaymentDate.setDate(nextPaymentDate.getDate() + Math.floor(Math.random() * 30)); // Next payment in 0-30 days
+      nextPaymentDue = nextPaymentDate.toISOString().split('T')[0];
+    } else if (status === 'completed') {
+      paidMonths = term;
+      paidAmount = Math.round(totalRepayment);
+    }
+    
+    // Generate loan object
+    mockLoans.push({
+      id: `loan-${i + 1}`,
+      userId,
+      type: loanTypes[Math.floor(Math.random() * loanTypes.length)],
+      purpose: loanPurposes[Math.floor(Math.random() * loanPurposes.length)],
+      amount,
+      interestRate: parseFloat(interestRate.toFixed(2)),
+      term,
+      monthlyPayment: Math.round(monthlyPayment),
+      totalRepayment: Math.round(totalRepayment),
+      status,
+      dateApplied: dateApplied.toISOString().split('T')[0],
+      dateIssued: status !== 'pending' && status !== 'rejected' ? dateIssued.toISOString().split('T')[0] : undefined,
+      paidAmount: status !== 'pending' && status !== 'rejected' ? paidAmount : undefined,
+      paidMonths: status !== 'pending' && status !== 'rejected' ? paidMonths : undefined,
+      remainingPayments: status === 'active' ? term - paidMonths : undefined,
+      nextPaymentDue: status === 'active' ? nextPaymentDue : undefined,
+      nextPaymentAmount: status === 'active' ? Math.round(monthlyPayment) : undefined,
+      collateral: Math.random() > 0.7, // 30% chance of having collateral
+      collateralType: Math.random() > 0.7 ? ['Vehicle', 'Property', 'Investment', 'Other'][Math.floor(Math.random() * 4)] : undefined,
+      collateralValue: Math.random() > 0.7 ? Math.round(amount * (1 + Math.random())) : undefined, // Collateral value slightly higher than loan
+      notes: Math.random() > 0.8 ? "Customer has good payment history." : undefined
+    });
+  }
+
+  // Sample documents
+  const sampleDocuments: Document[] = [
     {
-      id: "USR-001",
-      firstName: "John",
-      lastName: "Smith",
-      email: "john.smith@example.com",
-      phone: "+27 71 234 5678",
-      idNumber: "8506155012089",
-      dateOfBirth: "1985-06-15",
-      gender: "Male",
-      maritalStatus: "Married",
-      dependents: 2,
-      address: "123 Main Street",
-      suburb: "Sandton",
-      city: "Johannesburg",
-      state: "Gauteng",
-      zipCode: "2196",
-      country: "South Africa",
-      employmentStatus: "employed",
-      employmentType: "full-time",
-      employmentSector: "Finance",
-      employerName: "Standard Bank",
-      jobTitle: "Senior Manager",
-      yearsEmployed: 5,
-      monthlyIncome: 45000,
-      paymentDate: "25th of each month",
-      bankName: "Standard Bank",
-      accountType: "cheque",
-      accountNumber: "XXXX-XXXX-XXXX-5678",
-      bankingPeriod: 8,
-      creditScore: 720,
-      existingLoans: true,
-      existingLoanAmount: 150000,
-      monthlyDebt: 12000,
-      rentMortgage: 8000,
-      carPayment: 4500,
-      groceries: 3500,
-      utilities: 2000,
-      insurance: 1500,
-      otherExpenses: 2000,
-      totalMonthlyExpenses: 21500,
-      accountStatus: "active",
-      registrationDate: "2023-01-15",
-      lastLogin: "2023-04-20",
-      profileCompletionPercentage: 100,
+      id: "DOC-001",
+      userId: "USR-001",
+      name: "ID Document.pdf",
+      type: "id",
+      dateUploaded: "2023-03-10T08:30:00Z",
       verificationStatus: "verified",
-      role: "user",
-      documents: [],
-      loans: [],
-      passwordLastChanged: "2023-04-20",
-      recoveryEmail: "john.smith@example.com",
-      recoveryPhone: "+27 71 234 5678"
+      fileSize: "1.2 MB",
+      fileType: "application/pdf",
+      filePath: "/documents/id_document.pdf",
+      notes: "Identity document verified successfully"
     },
-    // Add more sample users as needed...
+    {
+      id: "DOC-002",
+      userId: "USR-001",
+      name: "Proof of Residence.jpg",
+      type: "proof_of_residence",
+      dateUploaded: "2023-03-12T10:15:00Z",
+      verificationStatus: "verified",
+      fileSize: "0.8 MB",
+      fileType: "image/jpeg",
+      filePath: "/documents/placeholder.svg",
+      notes: "Utility bill less than 3 months old"
+    },
+    {
+      id: "DOC-003",
+      userId: "USR-001",
+      name: "Bank Statement.pdf",
+      type: "bank_statement",
+      dateUploaded: "2023-03-15T14:45:00Z",
+      verificationStatus: "pending",
+      fileSize: "2.1 MB",
+      fileType: "application/pdf",
+      filePath: "/documents/bank_statement.pdf"
+    },
+    {
+      id: "DOC-004",
+      userId: "USR-001",
+      name: "Payslip.pdf",
+      type: "payslip",
+      dateUploaded: "2023-04-05T09:20:00Z", 
+      verificationStatus: "pending",
+      fileSize: "0.5 MB",
+      fileType: "application/pdf",
+      filePath: "/documents/id_document.pdf"
+    },
+    {
+      id: "DOC-005",
+      userId: "USR-001",
+      name: "Employment Contract.docx",
+      type: "other",
+      dateUploaded: "2023-04-10T11:30:00Z",
+      verificationStatus: "rejected",
+      fileSize: "1.5 MB",
+      fileType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      filePath: "/documents/placeholder.svg",
+      notes: "Document is expired. Please upload a current version."
+    }
   ];
 
-  // ... rest of the mock data generation function
-  // This is just to keep the existing mock data for fallback
+  // Update user documents reference
+  mockUsers[0].documents = sampleDocuments.filter(doc => doc.userId === mockUsers[0].id);
 
-  return { users: sampleUsers, loans: [], documents: [], applications: [] };
+  return { 
+    users: mockUsers, 
+    loans: mockLoans, 
+    documents: sampleDocuments, 
+    applications: [] 
+  };
+};
+
+// Load mock data for development
+const loadMockData = () => {
+  // Generate some mock users
+  const mockUsers = [
+    // ... existing mock users
+  ];
+  
+  // Generate some mock documents
+  const mockDocuments = [
+    // ... existing mock documents
+  ];
+  
+  // Generate some mock loans
+  const mockLoans = [
+    // ... existing mock loans
+  ];
+  
+  // Generate some mock notifications
+  const mockNotifications = [
+    // ... existing mock notifications
+  ];
+  
+  // Generate some mock applications
+  const mockApplications: Application[] = [
+    {
+      id: "app123456",
+      userId: "USR-pcvowfdd7",
+      status: "pending",
+      date: "2023-04-01",
+      amount: "R15,000",
+      completion: 60,
+      loanDetails: {
+        purpose: "Personal Loan",
+        term: 24,
+        monthlyPayment: "R750",
+        interestRate: 15.5
+      },
+      requiredAction: "Please upload your latest bank statement to continue processing."
+    },
+    {
+      id: "app789012",
+      userId: "USR-pcvowfdd7",
+      status: "in_review",
+      date: "2023-04-15",
+      amount: "R25,000",
+      completion: 85,
+      loanDetails: {
+        purpose: "Home Improvement",
+        term: 36,
+        monthlyPayment: "R950",
+        interestRate: 12.5
+      }
+    }
+  ];
+  
+  // Set the mock data in state
+  setAppData(prev => ({
+    ...prev,
+    users: mockUsers,
+    documents: mockDocuments,
+    loans: mockLoans,
+    notifications: mockNotifications,
+    applications: mockApplications,
+    currentUser: mockUsers[0]  // Auto-login the first user for development
+  }));
 }; 

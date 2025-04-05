@@ -44,7 +44,15 @@ import {
   FileCheck,
   LogIn,
   Receipt,
-  FileIcon as FileIconLucide
+  FileIcon as FileIconLucide,
+  CalendarDays,
+  Filter,
+  Link as LinkIcon,
+  Menu,
+  MessageSquare,
+  Search,
+  ShieldCheck,
+  User as UserIcon
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
@@ -65,6 +73,10 @@ import { scrollToTop } from "@/components/ScrollToTop";
 import { useAppData } from '@/utils/AppDataContext';
 import { useRequireAuth } from '@/utils/useRequireAuth';
 import { UserSettings } from '@/components/ui/user-settings';
+import DocumentUploader from '../components/DocumentUploader';
+import DocumentList, { DocumentListRef } from '../components/DocumentList';
+import DocumentsManager from '../components/DocumentsManager';
+import { calculateProfileCompletion, getIncompleteProfileItems, getDocumentTypeDisplayName } from '../utils/profileUtils';
 
 // Interface for form data
 interface FormData {
@@ -172,6 +184,14 @@ const UserProfileDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditing, setIsEditing] = useState(false);
   
+  // Get all required functions and data from AppDataContext
+  const { 
+    currentUser, 
+    getDocumentsByUserId, 
+    getApplicationsByUserId, 
+    updateUser 
+  } = useAppData();
+  
   // Function to handle tab changes and scroll to top
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -184,182 +204,38 @@ const UserProfileDashboard: React.FC = () => {
   }, []);
 
   // Use data from the App Context
-  const { currentUser, getUserById, getApplicationsByUserId, getLoansByUserId } = useAppData();
+  const [userData, setUserData] = useState<FormData>({
+    id: '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    idNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: '',
+    employmentStatus: '',
+    employmentType: '',
+    employmentSector: '',
+    employerName: '',
+    jobTitle: '',
+    yearsEmployed: 0,
+    monthlyIncome: 0,
+    bankName: '',
+    accountType: '',
+    accountNumber: '',
+    creditScore: 0,
+    accountStatus: '',
+    registrationDate: '',
+    profileCompletionPercentage: 0,
+    verificationStatus: '',
+    documents: [],
+    loans: [],
+  });
 
-  // Use the current user data, if logged in
-  const userData: FormData = currentUser ? {
-    id: currentUser.id,
-    firstName: currentUser.firstName,
-    lastName: currentUser.lastName,
-    email: currentUser.email,
-    phone: currentUser.phone,
-    idNumber: currentUser.idNumber,
-    dateOfBirth: currentUser.dateOfBirth,
-    gender: currentUser.gender,
-    maritalStatus: currentUser.maritalStatus,
-    accountNumber: currentUser.accountNumber,
-    address: currentUser.address,
-    suburb: currentUser.suburb || '',
-    city: currentUser.city,
-    state: currentUser.state,
-    zipCode: currentUser.zipCode,
-    country: currentUser.country || 'South Africa',
-    employmentStatus: currentUser.employmentStatus,
-    employmentType: currentUser.employmentType,
-    employmentSector: currentUser.employmentSector,
-    employerName: currentUser.employerName,
-    jobTitle: currentUser.jobTitle,
-    yearsEmployed: currentUser.yearsEmployed || 0,
-    monthlyIncome: currentUser.monthlyIncome || 0,
-    paymentDate: currentUser.paymentDate,
-    creditScore: currentUser.creditScore || 700,
-    existingLoans: currentUser.existingLoans || false,
-    existingLoanAmount: currentUser.existingLoanAmount || 0,
-    monthlyDebt: currentUser.monthlyDebt || 0,
-    bankName: currentUser.bankName,
-    accountType: currentUser.accountType,
-    bankingPeriod: currentUser.bankingPeriod || 0,
-    rentMortgage: currentUser.rentMortgage || 0,
-    carPayment: currentUser.carPayment || 0,
-    groceries: currentUser.groceries || 0,
-    utilities: currentUser.utilities || 0,
-    insurance: currentUser.insurance || 0,
-    otherExpenses: currentUser.otherExpenses || 0,
-    totalMonthlyExpenses: currentUser.totalMonthlyExpenses || 0,
-    availableCredit: 500000,
-    nextPaymentAmount: currentUser.loans?.find(loan => loan.status === 'active')?.nextPaymentAmount || 0,
-    nextPaymentDate: currentUser.loans?.find(loan => loan.status === 'active')?.nextPaymentDue || '',
-    profileCompletionPercentage: currentUser.profileCompletionPercentage || 80,
-    incompleteProfileItems: currentUser.incompleteProfileItems || [],
-    loans: currentUser.loans?.map(loan => ({
-      id: loan.id,
-      type: loan.type,
-      amount: loan.amount,
-      interestRate: loan.interestRate,
-      term: loan.term,
-      monthlyPayment: loan.monthlyPayment,
-      status: loan.status,
-      dateIssued: loan.dateIssued,
-      dateApplied: loan.dateApplied,
-      paidAmount: loan.paidAmount,
-      remainingPayments: loan.remainingPayments,
-      paidMonths: loan.paidMonths,
-      totalRepayment: loan.totalRepayment
-    })),
-    documents: currentUser.documents?.map(doc => ({
-      name: doc.name,
-      type: doc.type,
-      dateUploaded: doc.dateUploaded,
-      verificationStatus: doc.verificationStatus,
-      expiryDate: doc.expiryDate
-    }))
-  } : {
-    // Fallback default data if no user is logged in
-    firstName: "John",
-    lastName: "Smith",
-    email: "john.smith@example.com",
-    phone: "+27 71 234 5678",
-    idNumber: "8506155012089",
-    dateOfBirth: "1985-06-15",
-    gender: "Male",
-    maritalStatus: "Married",
-    accountNumber: "XXXX-XXXX-1234",
-    address: "123 Main Street",
-    suburb: "Sandton",
-    city: "Johannesburg",
-    state: "Gauteng",
-    zipCode: "2196",
-    country: "South Africa",
-    employmentStatus: "employed",
-    employmentType: "full-time",
-    employmentSector: "Finance",
-    employerName: "Standard Bank",
-    jobTitle: "Senior Manager",
-    yearsEmployed: 5,
-    monthlyIncome: 45000,
-    paymentDate: "25th of each month",
-    creditScore: 720,
-    existingLoans: true,
-    existingLoanAmount: 150000,
-    monthlyDebt: 12000,
-    bankName: "Standard Bank",
-    accountType: "cheque",
-    bankingPeriod: 8,
-    rentMortgage: 8000,
-    carPayment: 4500,
-    groceries: 3500,
-    utilities: 2000,
-    insurance: 1500,
-    otherExpenses: 3000,
-    totalMonthlyExpenses: 22500,
-    availableCredit: 500000,
-    nextPaymentAmount: 2645,
-    nextPaymentDate: "2023-08-15",
-    profileCompletionPercentage: 85,
-    incompleteProfileItems: [
-      "Upload latest bank statement",
-      "Verify phone number",
-    ],
-    loans: [
-      {
-        id: "LOAN7890",
-        type: "personal",
-        amount: 75000,
-        interestRate: 15.5,
-        term: 36,
-        monthlyPayment: 2645,
-        status: "active",
-        dateIssued: "2023-05-15",
-        paidAmount: 23805,
-        remainingPayments: 27,
-        paidMonths: 27,
-        totalRepayment: 2645 * 36
-      },
-      {
-        id: "LOAN4562",
-        type: "vehicle",
-        amount: 350000,
-        interestRate: 12.75,
-        term: 60,
-        monthlyPayment: 7895,
-        status: "active",
-        dateIssued: "2022-08-10",
-        paidAmount: 94740,
-        remainingPayments: 48,
-        paidMonths: 48,
-        totalRepayment: 7895 * 60
-      }
-    ],
-    documents: [
-      {
-        name: "ID Document",
-        type: "identification",
-        dateUploaded: "2023-01-15",
-        verificationStatus: "verified"
-      },
-      {
-        name: "Proof of Residence",
-        type: "proof_of_residence",
-        dateUploaded: "2023-01-15",
-        verificationStatus: "verified"
-      },
-      {
-        name: "3 Months Bank Statement",
-        type: "bank_statement",
-        dateUploaded: "2023-04-20",
-        verificationStatus: "verified"
-      },
-      {
-        name: "Proof of Income",
-        type: "proof_of_income",
-        dateUploaded: "2023-01-15",
-        verificationStatus: "verified"
-      }
-    ]
-  };
-
-  // Form state for editing personal information
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: userData.firstName,
     lastName: userData.lastName,
     email: userData.email,
@@ -370,6 +246,26 @@ const UserProfileDashboard: React.FC = () => {
     state: userData.state,
     zipCode: userData.zipCode
   });
+
+  useEffect(() => {
+    // If currentUser exists, populate userData state
+    if (currentUser) {
+      const userDocuments = getDocumentsByUserId(currentUser.id);
+      const profileCompletionPercentage = calculateProfileCompletion(currentUser);
+      const incompleteProfileItems = getIncompleteProfileItems(currentUser);
+      
+      setUserData({
+        ...currentUser,
+        documents: userDocuments,
+        profileCompletionPercentage: profileCompletionPercentage,
+        incompleteProfileItems: incompleteProfileItems,
+      });
+      
+      setFormData({
+        ...currentUser,
+      });
+    }
+  }, [currentUser, getDocumentsByUserId]);
 
   // Handle form input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -580,6 +476,16 @@ const UserProfileDashboard: React.FC = () => {
                           <CircleCheck className="h-3 w-3 mr-1" />
                           Verified
                         </span>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            console.log("Current User:", currentUser);
+                            toast.success("User data logged to console");
+                          }}
+                        >
+                          Debug User Data
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -679,63 +585,59 @@ const UserProfileDashboard: React.FC = () => {
                     <div className="glass-card p-6 md:col-span-2">
                       <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-medium">Recent Activity</h3>
-                        <Button variant="link" className="p-0 h-auto">View All</Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Activity className="h-4 w-4" />
+                        </Button>
                       </div>
                       
-                      {userData.recentActivity && userData.recentActivity.length > 0 ? (
-                  <div className="space-y-4">
-                          {userData.recentActivity.slice(0, 5).map((activity, index) => (
-                            <div key={index} className="flex items-start pb-4 border-b border-border last:border-0 last:pb-0">
-                              <div className="mr-4 mt-0.5">
-                                {activity.type === 'payment' && <CircleDollarSign className="h-5 w-5 text-green-500" />}
-                                {activity.type === 'application' && <FileText className="h-5 w-5 text-blue-500" />}
-                                {activity.type === 'document' && <FileCheck className="h-5 w-5 text-yellow-500" />}
-                                {activity.type === 'login' && <LogIn className="h-5 w-5 text-purple-500" />}
-                                {activity.type === 'other' && <Activity className="h-5 w-5 text-gray-500" />}
-                      </div>
-                              <div className="flex-1">
-                                <div className="flex justify-between">
+                      {currentUser?.recentActivity && currentUser.recentActivity.length > 0 ? (
+                        <div className="space-y-4">
+                          {(currentUser.recentActivity || []).map((activity, index) => (
+                            <div key={index} className="p-4 rounded-lg border border-border">
+                              <div className="flex items-start">
+                                <div className="flex-1">
                                   <p className="font-medium">{activity.title}</p>
-                                  <p className="text-sm text-foreground/70">{activity.date}</p>
-                    </div>
-                                <p className="text-sm text-foreground/70 mt-1">{activity.description}</p>
-                  </div>
+                                  <p className="text-sm text-foreground/70 mt-1">{activity.description}</p>
+                                  <div className="flex justify-between items-center mt-2">
+                                    <span className="text-xs text-foreground/50">{activity.date}</span>
+                                    {activity.amount && (
+                                      <span className="font-medium">{formatAmount(activity.amount)}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           ))}
                         </div>
                       ) : (
                         <div className="text-center py-6">
                           <p className="text-foreground/70">No recent activity</p>
+                          <p className="text-xs mt-2">Debug: recentActivity exists: {currentUser?.recentActivity ? 'yes' : 'no'}, length: {currentUser?.recentActivity?.length || 0}</p>
                         </div>
                       )}
-                </div>
-                
+                    </div>
+                    
                     <div className="glass-card p-6">
                       <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-medium">Notifications</h3>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                           <BellRing className="h-4 w-4" />
                         </Button>
-                            </div>
+                      </div>
                       
-                      {userData.notifications && userData.notifications.length > 0 ? (
+                      {currentUser?.notifications && currentUser.notifications.length > 0 ? (
                         <div className="space-y-4">
-                          {(userData.notifications || []).map((notification, index) => (
+                          {(currentUser.notifications || []).map((notification, index) => (
                             <div key={index} className={`p-4 rounded-lg ${!notification.read ? 'bg-primary/5 border-l-2 border-primary' : 'border border-border'}`}>
                               <div className="flex items-start">
                                 <div className="mr-3">
-                              {getNotificationIcon(notification.type)}
+                                  {getNotificationIcon(notification.type)}
                                 </div>
                                 <div className="flex-1">
                                   <p className="font-medium">{notification.title}</p>
                                   <p className="text-sm text-foreground/70 mt-1">{notification.message}</p>
                                   <div className="flex justify-between items-center mt-2">
                                     <span className="text-xs text-foreground/50">{notification.date}</span>
-                                    {notification.action && (
-                                      <Button variant="link" size="sm" className="h-auto p-0">
-                                        {notification.action}
-                                      </Button>
-                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -746,6 +648,7 @@ const UserProfileDashboard: React.FC = () => {
                         <div className="text-center py-6 flex flex-col items-center">
                           <BellOff className="h-8 w-8 text-foreground/30 mb-2" />
                           <p className="text-foreground/70">No new notifications</p>
+                          <p className="text-xs mt-2">Debug: notifications exists: {currentUser?.notifications ? 'yes' : 'no'}, length: {currentUser?.notifications?.length || 0}</p>
                         </div>
                       )}
                     </div>
@@ -770,16 +673,20 @@ const UserProfileDashboard: React.FC = () => {
                         <div className={`p-4 rounded-lg border ${
                           userData.documents?.some(d => d.type === 'id' && d.verificationStatus === 'verified')
                             ? 'border-green-500 bg-green-50/10'
+                            : userData.documents?.some(d => d.type === 'id' && d.verificationStatus === 'pending')
+                              ? 'border-amber-500 bg-amber-50/10'
                             : 'border-dashed border-foreground/20'
                         }`}>
                           <div className="flex items-center">
                             <div className="mr-3">
                               {userData.documents?.some(d => d.type === 'id' && d.verificationStatus === 'verified')
                                 ? <CheckCircle className="h-5 w-5 text-green-500" />
+                                : userData.documents?.some(d => d.type === 'id' && d.verificationStatus === 'pending')
+                                  ? <Clock className="h-5 w-5 text-amber-500" />
                                 : <Circle className="h-5 w-5 text-foreground/30" />
                               }
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium">ID Document</p>
                               <p className="text-xs text-foreground/70 mt-1">
                                 {userData.documents?.some(d => d.type === 'id' && d.verificationStatus === 'verified')
@@ -790,22 +697,36 @@ const UserProfileDashboard: React.FC = () => {
                                 }
                               </p>
                             </div>
+                            {userData.documents?.some(d => d.type === 'id') && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 ml-2"
+                                onClick={() => handleTabChange('documents')}
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                         
                         <div className={`p-4 rounded-lg border ${
                           userData.documents?.some(d => d.type === 'proof_of_residence' && d.verificationStatus === 'verified')
                             ? 'border-green-500 bg-green-50/10'
+                            : userData.documents?.some(d => d.type === 'proof_of_residence' && d.verificationStatus === 'pending')
+                              ? 'border-amber-500 bg-amber-50/10'
                             : 'border-dashed border-foreground/20'
                         }`}>
                           <div className="flex items-center">
                             <div className="mr-3">
                               {userData.documents?.some(d => d.type === 'proof_of_residence' && d.verificationStatus === 'verified')
                                 ? <CheckCircle className="h-5 w-5 text-green-500" />
+                                : userData.documents?.some(d => d.type === 'proof_of_residence' && d.verificationStatus === 'pending')
+                                  ? <Clock className="h-5 w-5 text-amber-500" />
                                 : <Circle className="h-5 w-5 text-foreground/30" />
                               }
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium">Proof of Residence</p>
                               <p className="text-xs text-foreground/70 mt-1">
                                 {userData.documents?.some(d => d.type === 'proof_of_residence' && d.verificationStatus === 'verified')
@@ -816,22 +737,36 @@ const UserProfileDashboard: React.FC = () => {
                                 }
                               </p>
                             </div>
+                            {userData.documents?.some(d => d.type === 'proof_of_residence') && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 ml-2"
+                                onClick={() => handleTabChange('documents')}
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                         
                         <div className={`p-4 rounded-lg border ${
                           userData.documents?.some(d => d.type === 'bank_statement' && d.verificationStatus === 'verified')
                             ? 'border-green-500 bg-green-50/10'
+                            : userData.documents?.some(d => d.type === 'bank_statement' && d.verificationStatus === 'pending')
+                              ? 'border-amber-500 bg-amber-50/10'
                             : 'border-dashed border-foreground/20'
                         }`}>
                           <div className="flex items-center">
                             <div className="mr-3">
                               {userData.documents?.some(d => d.type === 'bank_statement' && d.verificationStatus === 'verified')
                                 ? <CheckCircle className="h-5 w-5 text-green-500" />
+                                : userData.documents?.some(d => d.type === 'bank_statement' && d.verificationStatus === 'pending')
+                                  ? <Clock className="h-5 w-5 text-amber-500" />
                                 : <Circle className="h-5 w-5 text-foreground/30" />
                               }
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium">Bank Statements</p>
                               <p className="text-xs text-foreground/70 mt-1">
                                 {userData.documents?.some(d => d.type === 'bank_statement' && d.verificationStatus === 'verified')
@@ -842,22 +777,36 @@ const UserProfileDashboard: React.FC = () => {
                                 }
                               </p>
                             </div>
+                            {userData.documents?.some(d => d.type === 'bank_statement') && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 ml-2"
+                                onClick={() => handleTabChange('documents')}
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                         
                         <div className={`p-4 rounded-lg border ${
                           userData.documents?.some(d => d.type === 'payslip' && d.verificationStatus === 'verified')
                             ? 'border-green-500 bg-green-50/10'
+                            : userData.documents?.some(d => d.type === 'payslip' && d.verificationStatus === 'pending')
+                              ? 'border-amber-500 bg-amber-50/10'
                             : 'border-dashed border-foreground/20'
                         }`}>
                           <div className="flex items-center">
                             <div className="mr-3">
                               {userData.documents?.some(d => d.type === 'payslip' && d.verificationStatus === 'verified')
                                 ? <CheckCircle className="h-5 w-5 text-green-500" />
+                                : userData.documents?.some(d => d.type === 'payslip' && d.verificationStatus === 'pending')
+                                  ? <Clock className="h-5 w-5 text-amber-500" />
                                 : <Circle className="h-5 w-5 text-foreground/30" />
                               }
                             </div>
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium">Latest Payslip</p>
                               <p className="text-xs text-foreground/70 mt-1">
                                 {userData.documents?.some(d => d.type === 'payslip' && d.verificationStatus === 'verified')
@@ -868,6 +817,16 @@ const UserProfileDashboard: React.FC = () => {
                                 }
                               </p>
                             </div>
+                            {userData.documents?.some(d => d.type === 'payslip') && (
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6 ml-2"
+                                onClick={() => handleTabChange('documents')}
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -892,23 +851,25 @@ const UserProfileDashboard: React.FC = () => {
                       <div className="mb-6">
                         <div className="flex justify-between mb-2">
                           <span className="text-sm">Complete your profile</span>
-                          <span className="text-sm font-medium">{userData.profileCompletionPercentage || 85}%</span>
+                          <span className="text-sm font-medium">{userData.profileCompletionPercentage}%</span>
                         </div>
                         <div className="h-2 bg-secondary/50 rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-primary"
-                            style={{ width: `${userData.profileCompletionPercentage || 85}%` }}
+                            style={{ width: `${userData.profileCompletionPercentage}%` }}
                           />
                         </div>
                       </div>
                       
                       <div className="space-y-3">
-                        {userData.incompleteProfileItems?.map((item, index) => (
+                        {userData.incompleteProfileItems?.length > 0 ? (
+                          userData.incompleteProfileItems.map((item, index) => (
                           <div key={index} className="flex items-center">
                             <Circle className="h-4 w-4 text-foreground/30 mr-3" />
                             <span className="text-sm">{item}</span>
                           </div>
-                        )) || (
+                          ))
+                        ) : (
                           <div className="text-center py-2">
                             <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
                             <p className="font-medium">Profile Complete!</p>
@@ -1325,6 +1286,7 @@ const UserProfileDashboard: React.FC = () => {
                     
                     {/* Get applications from context */}
                     {(() => {
+                      // Use the function defined above instead of relying on context
                       const userApplications = getApplicationsByUserId(currentUser?.id || '');
                       const hasLoans = userData.loans && userData.loans.length > 0;
                       const hasApplications = userApplications && userApplications.length > 0;
@@ -1356,216 +1318,309 @@ const UserProfileDashboard: React.FC = () => {
                             <>
                               <h3 className="text-lg font-medium mb-4">Pending Applications</h3>
                               <div className="grid grid-cols-1 gap-6 mb-8">
-                                {userApplications.map((application, index) => (
-                                  <div key={`app-${index}`} className="glass-card-inner p-4 border-l-4 border-yellow-500">
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                      <div className="md:col-span-1">
-                                        <div className="flex items-center h-full">
-                                          <div className="mr-4">
-                                            <Clock className="h-10 w-10 text-yellow-500" />
-                                          </div>
-                                          <div>
-                                            <h3 className="text-lg font-medium">App #{application.id.substring(application.id.length - 6)}</h3>
-                                            <p className="text-sm text-foreground/70">
-                                              {application.loanDetails?.purpose || 'Loan Application'}
-                                            </p>
+                                {userApplications.map((application, index) => {
+                                  // Calculate border color based on status
+                                  const statusColors = {
+                                    pending: "border-yellow-500",
+                                    in_review: "border-blue-500",
+                                    approved: "border-green-500",
+                                    rejected: "border-red-500"
+                                  };
+                                  
+                                  // Calculate background color for the card
+                                  const statusBgColors = {
+                                    pending: "bg-yellow-50/10",
+                                    in_review: "bg-blue-50/10",
+                                    approved: "bg-green-50/10",
+                                    rejected: "bg-red-50/10"
+                                  };
+                                  
+                                  // Calculate the icon based on status
+                                  const StatusIcon = () => {
+                                    switch(application.status) {
+                                      case "pending":
+                                        return <Clock className="h-10 w-10 text-yellow-500" />;
+                                      case "in_review":
+                                        return <FileText className="h-10 w-10 text-blue-500" />;
+                                      case "approved":
+                                        return <CheckCircle className="h-10 w-10 text-green-500" />;
+                                      case "rejected":
+                                        return <XCircle className="h-10 w-10 text-red-500" />;
+                                      default:
+                                        return <Clock className="h-10 w-10 text-yellow-500" />;
+                                    }
+                                  };
+                                  
+                                  // Calculate progress based on status
+                                  const getProgressPercentage = () => {
+                                    switch(application.status) {
+                                      case "pending": return application.completion || 25;
+                                      case "in_review": return application.completion || 50;
+                                      case "approved": return 100;
+                                      case "rejected": return 100;
+                                      default: return application.completion || 25;
+                                    }
+                                  };
+                                  
+                                  // Get progress color
+                                  const getProgressColor = () => {
+                                    switch(application.status) {
+                                      case "pending": return "bg-yellow-500";
+                                      case "in_review": return "bg-blue-500";
+                                      case "approved": return "bg-green-500";
+                                      case "rejected": return "bg-red-500";
+                                      default: return "bg-yellow-500";
+                                    }
+                                  };
+                                  
+                                  // Format application status for display
+                                  const formatStatus = (status) => {
+                                    switch(status) {
+                                      case "pending": return "Pending Review";
+                                      case "in_review": return "In Review";
+                                      case "approved": return "Approved";
+                                      case "rejected": return "Rejected";
+                                      default: return status.replace("_", " ");
+                                    }
+                                  };
+                                  
+                                  return (
+                                    <div key={`app-${index}`} className={`glass-card-inner p-4 border-l-4 ${statusColors[application.status] || 'border-yellow-500'} ${statusBgColors[application.status] || ''}`}>
+                                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                        <div className="md:col-span-1">
+                                          <div className="flex items-center h-full">
+                                            <div className="mr-4">
+                                              <StatusIcon />
+                                            </div>
+                                            <div>
+                                              <h3 className="text-lg font-medium">App #{application.id.substring(application.id.length - 6)}</h3>
+                                              <p className="text-sm text-foreground/70">
+                                                {application.loanDetails?.purpose || 'Loan Application'}
+                                              </p>
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                      
-                                      <div className="md:col-span-2">
-                                        <div className="grid grid-cols-2 gap-4">
-                                          <div>
-                                            <p className="text-sm text-foreground/70">Amount</p>
-                                            <p className="font-medium">{application.amount}</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-sm text-foreground/70">Application Date</p>
-                                            <p className="font-medium">{application.date}</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-sm text-foreground/70">Term</p>
-                                            <p className="font-medium">{application.loanDetails?.term || '--'} months</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-sm text-foreground/70">Monthly Payment</p>
-                                            <p className="font-medium">{application.loanDetails?.monthlyPayment || '--'}</p>
+                                        
+                                        <div className="md:col-span-2">
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                              <p className="text-sm text-foreground/70">Amount</p>
+                                              <p className="font-medium">{application.amount}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-sm text-foreground/70">Application Date</p>
+                                              <p className="font-medium">{application.date}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-sm text-foreground/70">Term</p>
+                                              <p className="font-medium">{application.loanDetails?.term || '--'} months</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-sm text-foreground/70">Monthly Payment</p>
+                                              <p className="font-medium">{application.loanDetails?.monthlyPayment || '--'}</p>
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                      
-                                      <div className="md:col-span-1">
-                                        <div className="h-full flex flex-col justify-between">
-                                          <div>
-                                            <p className="text-sm text-foreground/70">Status</p>
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                              {application.status}
-                                            </span>
-                                          </div>
-                                          
-                                          {application.completion && (
+                                        
+                                        <div className="md:col-span-1">
+                                          <div className="h-full flex flex-col justify-between">
+                                            <div>
+                                              <p className="text-sm text-foreground/70">Status</p>
+                                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                                ${application.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
+                                                  application.status === 'in_review' ? 'bg-blue-100 text-blue-800' : 
+                                                  application.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                                                  application.status === 'rejected' ? 'bg-red-100 text-red-800' : 
+                                                  'bg-gray-100 text-gray-800'}`}
+                                              >
+                                                {formatStatus(application.status)}
+                                              </span>
+                                            </div>
+                                            
                                             <div className="mt-2">
                                               <div className="flex items-center justify-between text-xs mb-1">
                                                 <span>Processing</span>
-                                                <span>{application.completion}%</span>
+                                                <span>{getProgressPercentage()}%</span>
                                               </div>
                                               <div className="h-1.5 w-full bg-secondary/50 rounded-full overflow-hidden">
                                                 <div 
-                                                  className="h-full bg-yellow-500"
-                                                  style={{ width: `${application.completion}%` }}
+                                                  className={`h-full ${getProgressColor()}`}
+                                                  style={{ width: `${getProgressPercentage()}%` }}
                                                 />
                                               </div>
                                             </div>
-                                          )}
-                                          
-                                          <div className="mt-4 flex flex-col gap-2">
-                                            <Button 
-                                              variant="outline" 
-                                              className="w-full text-xs"
-                                              onClick={() => alert(`View application details for ${application.id}`)}
-                                            >
-                                              <Eye className="h-3 w-3 mr-1" />
-                                              Track Application
-                                            </Button>
-                                            <Button 
-                                              variant="secondary" 
-                                              className="w-full text-xs"
-                                              onClick={() => alert(`Chat about application ${application.id}`)}
-                                            >
-                                              Contact Support
-                                            </Button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    
-                                    {application.requiredAction && (
-                                      <div className="mt-4 pt-4 border-t border-border bg-yellow-50/10 p-3 rounded-md">
-                                        <p className="text-sm font-semibold text-yellow-700 flex items-center">
-                                          <AlertCircle className="h-4 w-4 mr-2" />
-                                          Required Action:
-                                        </p>
-                                        <p className="text-sm text-foreground/70">{application.requiredAction}</p>
-                                      </div>
-                                    )}
-                                    
-                                    {/* Detailed Application Info - Collapsible */}
-                                    <div className="mt-4 pt-4 border-t border-border">
-                                      <details className="group">
-                                        <summary className="flex items-center cursor-pointer list-none">
-                                          <div className="font-medium text-sm flex items-center">
-                                            <ArrowRight className="h-4 w-4 mr-2 transition-transform group-open:rotate-90" />
-                                            Application Details
-                                          </div>
-                                        </summary>
-                                        <div className="mt-3 pl-6">
-                                          <div className="space-y-4">
-                                            {/* Application Progress Timeline */}
-                                            <div>
-                                              <h4 className="text-sm font-medium mb-2">Application Progress</h4>
-                                              <div className="relative pl-6 border-l border-dashed border-primary/40">
-                                                <div className="space-y-6">
-                                                  <div className="relative">
-                                                    <div className="absolute -left-[27px] h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                                                      <div className="h-2 w-2 rounded-full bg-white"></div>
-                                                    </div>
-                                                    <div>
-                                                      <p className="text-sm font-medium">Application Submitted</p>
-                                                      <p className="text-xs text-foreground/70">{application.date}</p>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div className="relative">
-                                                    <div className="absolute -left-[27px] h-5 w-5 rounded-full bg-primary/20 flex items-center justify-center">
-                                                      <div className="h-2 w-2 rounded-full bg-primary/40"></div>
-                                                    </div>
-                                                    <div>
-                                                      <p className="text-sm font-medium text-foreground/70">Document Verification</p>
-                                                      <p className="text-xs text-foreground/70">In Progress</p>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div className="relative">
-                                                    <div className="absolute -left-[27px] h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
-                                                      <div className="h-2 w-2 rounded-full bg-primary/20"></div>
-                                                    </div>
-                                                    <div>
-                                                      <p className="text-sm font-medium text-foreground/40">Credit Assessment</p>
-                                                      <p className="text-xs text-foreground/40">Pending</p>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div className="relative">
-                                                    <div className="absolute -left-[27px] h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
-                                                      <div className="h-2 w-2 rounded-full bg-primary/20"></div>
-                                                    </div>
-                                                    <div>
-                                                      <p className="text-sm font-medium text-foreground/40">Final Approval</p>
-                                                      <p className="text-xs text-foreground/40">Pending</p>
-                                                    </div>
-                                                  </div>
-                                                  
-                                                  <div className="relative">
-                                                    <div className="absolute -left-[27px] h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center">
-                                                      <div className="h-2 w-2 rounded-full bg-primary/20"></div>
-                                                    </div>
-                                                    <div>
-                                                      <p className="text-sm font-medium text-foreground/40">Fund Disbursement</p>
-                                                      <p className="text-xs text-foreground/40">Pending</p>
-                                                    </div>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                            </div>
                                             
-                                            {/* Additional Application Info */}
-                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+                                            <div className="mt-4 flex flex-col gap-2">
+                                              <Button 
+                                                variant="outline" 
+                                                className="w-full text-xs"
+                                                onClick={() => alert(`View application details for ${application.id}`)}
+                                              >
+                                                <Eye className="h-3 w-3 mr-1" />
+                                                Track Application
+                                              </Button>
+                                              <Button 
+                                                variant="secondary" 
+                                                className="w-full text-xs"
+                                                onClick={() => alert(`Chat about application ${application.id}`)}
+                                              >
+                                                Contact Support
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      {application.requiredAction && (
+                                        <div className={`mt-4 pt-4 border-t border-border p-3 rounded-md 
+                                          ${application.status === 'pending' ? 'bg-yellow-50/10' :
+                                            application.status === 'in_review' ? 'bg-blue-50/10' :
+                                            application.status === 'approved' ? 'bg-green-50/10' :
+                                            application.status === 'rejected' ? 'bg-red-50/10' :
+                                            'bg-yellow-50/10'}`}>
+                                          <p className={`text-sm font-semibold flex items-center
+                                            ${application.status === 'pending' ? 'text-yellow-700' :
+                                              application.status === 'in_review' ? 'text-blue-700' :
+                                              application.status === 'approved' ? 'text-green-700' :
+                                              application.status === 'rejected' ? 'text-red-700' :
+                                              'text-yellow-700'}`}>
+                                            <AlertCircle className="h-4 w-4 mr-2" />
+                                            Required Action:
+                                          </p>
+                                          <p className="text-sm text-foreground/70">{application.requiredAction}</p>
+                                        </div>
+                                      )}
+                                      
+                                      {/* Detailed Application Info - Collapsible */}
+                                      <div className="mt-4 pt-4 border-t border-border">
+                                        <details className="group">
+                                          <summary className="flex items-center cursor-pointer list-none">
+                                            <div className="font-medium text-sm flex items-center">
+                                              <ArrowRight className="h-4 w-4 mr-2 transition-transform group-open:rotate-90" />
+                                              Application Details
+                                            </div>
+                                          </summary>
+                                          <div className="mt-3 pl-6">
+                                            <div className="space-y-4">
+                                              {/* Application Progress Timeline */}
                                               <div>
-                                                <h4 className="text-sm font-medium mb-2">Loan Details</h4>
-                                                <div className="space-y-2 text-sm">
-                                                  <div className="flex justify-between">
-                                                    <span className="text-foreground/70">Purpose:</span>
-                                                    <span className="font-medium">{application.loanDetails?.purpose || '--'}</span>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <span className="text-foreground/70">Interest Rate:</span>
-                                                    <span className="font-medium">{application.loanDetails?.interestRate || '--'}</span>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <span className="text-foreground/70">Processing Fee:</span>
-                                                    <span className="font-medium">R1,250</span>
-                                                  </div>
-                                                  <div className="flex justify-between">
-                                                    <span className="text-foreground/70">Insurance:</span>
-                                                    <span className="font-medium">R350/month</span>
-                                                  </div>
-                                                </div>
-                                              </div>
-                                              
-                                              <div>
-                                                <h4 className="text-sm font-medium mb-2">Document Status</h4>
-                                                <div className="space-y-2 text-sm">
-                                                  {(application.documents || []).map((doc, i) => (
-                                                    <div key={i} className="flex justify-between items-center">
-                                                      <span className="text-foreground/70">{doc.name}:</span>
-                                                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                                        doc.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
-                                                        doc.verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                                        'bg-red-100 text-red-800'
-                                                      }`}>
-                                                        {doc.verificationStatus}
-                                                      </span>
+                                                <h4 className="text-sm font-medium mb-2">Application Progress</h4>
+                                                <div className="relative pl-6 border-l border-dashed border-primary/40">
+                                                  <div className="space-y-6">
+                                                    {/* Application Submitted - Always completed */}
+                                                    <div className="relative">
+                                                      <div className="absolute -left-[27px] h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                                                        <div className="h-2 w-2 rounded-full bg-white"></div>
+                                                      </div>
+                                                      <div>
+                                                        <p className="text-sm font-medium">Application Submitted</p>
+                                                        <p className="text-xs text-foreground/70">{application.date}</p>
+                                                      </div>
                                                     </div>
-                                                  ))}
+                                                    
+                                                    {/* Document Verification */}
+                                                    <div className="relative">
+                                                      <div className={`absolute -left-[27px] h-5 w-5 rounded-full
+                                                        ${application.status === 'pending' ? 'bg-yellow-500' : 
+                                                          (application.status === 'in_review' || application.status === 'approved' || application.status === 'rejected') ? 'bg-green-500' : 
+                                                          'bg-primary/20'} 
+                                                        flex items-center justify-center`}>
+                                                        <div className="h-2 w-2 rounded-full bg-white"></div>
+                                                      </div>
+                                                      <div>
+                                                        <p className={`text-sm font-medium 
+                                                          ${application.status === 'pending' ? 'text-yellow-500' : 
+                                                            (application.status === 'in_review' || application.status === 'approved' || application.status === 'rejected') ? '' : 
+                                                            'text-foreground/70'}`}>
+                                                          Document Verification
+                                                        </p>
+                                                        <p className="text-xs text-foreground/70">
+                                                          {application.status === 'pending' ? 'In Progress' : 
+                                                            (application.status === 'in_review' || application.status === 'approved' || application.status === 'rejected') ? 'Completed' : 
+                                                            'Pending'}
+                                                        </p>
+                                                      </div>
+                                                    </div>
+                                                    
+                                                    {/* Credit Assessment */}
+                                                    <div className="relative">
+                                                      <div className={`absolute -left-[27px] h-5 w-5 rounded-full
+                                                        ${application.status === 'in_review' ? 'bg-blue-500' : 
+                                                          (application.status === 'approved' || application.status === 'rejected') ? 'bg-green-500' : 
+                                                          'bg-primary/10'} 
+                                                        flex items-center justify-center`}>
+                                                        <div className="h-2 w-2 rounded-full bg-white"></div>
+                                                      </div>
+                                                      <div>
+                                                        <p className={`text-sm font-medium 
+                                                          ${application.status === 'in_review' ? 'text-blue-500' : 
+                                                            (application.status === 'approved' || application.status === 'rejected') ? '' : 
+                                                            'text-foreground/40'}`}>
+                                                          Credit Assessment
+                                                        </p>
+                                                        <p className="text-xs text-foreground/70">
+                                                          {application.status === 'in_review' ? 'In Progress' : 
+                                                            (application.status === 'approved' || application.status === 'rejected') ? 'Completed' : 
+                                                            'Pending'}
+                                                        </p>
+                                                      </div>
+                                                    </div>
+                                                    
+                                                    {/* Final Decision */}
+                                                    <div className="relative">
+                                                      <div className={`absolute -left-[27px] h-5 w-5 rounded-full
+                                                        ${application.status === 'approved' ? 'bg-green-500' : 
+                                                          application.status === 'rejected' ? 'bg-red-500' : 
+                                                          'bg-primary/10'} 
+                                                        flex items-center justify-center`}>
+                                                        <div className="h-2 w-2 rounded-full bg-white"></div>
+                                                      </div>
+                                                      <div>
+                                                        <p className={`text-sm font-medium 
+                                                          ${application.status === 'approved' ? 'text-green-500' : 
+                                                            application.status === 'rejected' ? 'text-red-500' : 
+                                                            'text-foreground/40'}`}>
+                                                          Final Decision
+                                                        </p>
+                                                        <p className="text-xs text-foreground/70">
+                                                          {application.status === 'approved' ? 'Approved' : 
+                                                            application.status === 'rejected' ? 'Rejected' : 
+                                                            'Pending'}
+                                                        </p>
+                                                      </div>
+                                                    </div>
+                                                    
+                                                    {/* Fund Disbursement - Only for approved loans */}
+                                                    <div className="relative">
+                                                      <div className={`absolute -left-[27px] h-5 w-5 rounded-full
+                                                        ${application.status === 'approved' && application.completion === 100 ? 'bg-green-500' : 
+                                                          'bg-primary/10'} 
+                                                        flex items-center justify-center`}>
+                                                        <div className="h-2 w-2 rounded-full bg-white"></div>
+                                                      </div>
+                                                      <div>
+                                                        <p className={`text-sm font-medium 
+                                                          ${application.status === 'approved' && application.completion === 100 ? 'text-green-500' : 
+                                                            'text-foreground/40'}`}>
+                                                          Fund Disbursement
+                                                        </p>
+                                                        <p className="text-xs text-foreground/70">
+                                                          {application.status === 'approved' && application.completion === 100 ? 'Completed' : 
+                                                            application.status === 'approved' ? 'Processing' : 
+                                                            'Pending'}
+                                                        </p>
+                                                      </div>
+                                                    </div>
+                                                  </div>
                                                 </div>
                                               </div>
                                             </div>
                                           </div>
-                                        </div>
-                                      </details>
+                                        </details>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </>
                           )}
@@ -1938,94 +1993,10 @@ const UserProfileDashboard: React.FC = () => {
               {activeTab === 'documents' && (
                 <div className="space-y-8 animate-fade-in tab-content">
                   <div className="glass-card p-6">
-                    <h2 className="text-2xl font-bold mb-6">My Documents</h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {userData.documents && userData.documents.length > 0 ? (
-                        userData.documents.map((doc, index) => (
-                          <div key={index} className="glass-card-inner p-4 flex flex-col">
-                            <div className="flex items-center mb-4">
-                              {doc.type === 'id' && <BadgeCheck className="h-6 w-6 text-green-500 mr-3" />}
-                              {doc.type === 'proof_of_residence' && <Home className="h-6 w-6 text-blue-500 mr-3" />}
-                              {doc.type === 'bank_statement' && <FileText className="h-6 w-6 text-yellow-500 mr-3" />}
-                              {doc.type === 'payslip' && <Receipt className="h-6 w-6 text-purple-500 mr-3" />}
-                              {doc.type === 'other' && <FileIconLucide className="h-6 w-6 text-gray-500 mr-3" />}
-                              <div>
-                                <h3 className="text-lg font-medium">{doc.name}</h3>
-                                <p className="text-sm text-foreground/70">Uploaded {doc.dateUploaded}</p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex-1 flex flex-col">
-                              <div className="flex-1">
-                                <p className="text-sm text-foreground/70 mb-1">Document Type</p>
-                                <p className="font-medium capitalize">{doc.type.replace(/_/g, ' ')}</p>
-                                
-                                {doc.expiryDate && (
-                                  <div className="mt-3">
-                                    <p className="text-sm text-foreground/70 mb-1">Expires On</p>
-                                    <p className={`font-medium ${
-                                      new Date(doc.expiryDate) < new Date() ? 'text-red-500' : 
-                                      Number(new Date(doc.expiryDate)) - Number(new Date()) < 30 * 24 * 60 * 60 * 1000 ? 'text-yellow-500' : ''
-                                    }`}>
-                                      {doc.expiryDate}
-                                      {new Date(doc.expiryDate) < new Date() && ' (Expired)'}
-                                      {new Date(doc.expiryDate) > new Date() && 
-                                       Number(new Date(doc.expiryDate)) - Number(new Date()) < 30 * 24 * 60 * 60 * 1000 && 
-                                       ' (Expiring soon)'}
-                                    </p>
-                              </div>
-                                )}
-                                
-                                {doc.verificationStatus && (
-                                  <div className="mt-3">
-                                    <p className="text-sm text-foreground/70 mb-1">Verification Status</p>
-                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      doc.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
-                                      doc.verificationStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                      doc.verificationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
-                                      'bg-gray-100 text-gray-800'
-                                    }`}>
-                                      {doc.verificationStatus === 'verified' && 'Verified'}
-                                      {doc.verificationStatus === 'pending' && 'Pending Verification'}
-                                      {doc.verificationStatus === 'rejected' && 'Rejected'}
-                                    </span>
-                                  </div>
-                              )}
-                            </div>
-                              
-                              <div className="mt-4 pt-3 border-t border-border flex space-x-3">
-                                <Button variant="outline" size="sm" className="flex-1">
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View
-                                </Button>
-                                <Button variant="outline" size="sm" className="flex-1">
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Download
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="glass-card-inner p-8 text-center col-span-3">
-                          <div className="flex flex-col items-center">
-                            <FileX className="h-16 w-16 text-foreground/30 mb-4" />
-                            <h3 className="text-xl font-medium mb-2">No Documents Found</h3>
-                            <p className="text-foreground/70 mb-6 max-w-md mx-auto">
-                              You haven't uploaded any documents yet. Upload required documents to complete your profile.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="mt-8">
-                      <Button className="w-full md:w-auto">
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload New Document
-                      </Button>
-                    </div>
+                    <DocumentsManager 
+                      userId={userData.id}
+                      title="My Documents"
+                    />
                   </div>
                 </div>
               )}
@@ -2124,9 +2095,9 @@ const UserProfileDashboard: React.FC = () => {
                     <h2 className="text-2xl font-bold mb-6">Account Settings</h2>
                     
                     <UserSettings />
-                  </div>
                 </div>
-              )}
+              </div>
+            )}
             </div>
           </div>
         </div>

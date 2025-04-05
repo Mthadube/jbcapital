@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ChevronDown, ChevronUp, User, Briefcase, Home, CreditCard, FileText, AlignJustify, Phone, Mail, MapPin, Calendar, FileCheck, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import DocumentViewer from "@/components/DocumentViewer";
+import { useAppData } from "@/utils/AppDataContext";
+import { toast } from "sonner";
 
 type UserProfileViewProps = {
   user: any;
@@ -300,60 +303,67 @@ const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onEditClick }) 
           {expandedSections.includes("activeLoans") && (
             <CardContent>
               <div className="space-y-4">
-                {user.loans.map((loan, index) => (
-                  <Card key={loan.id || index} className="border border-muted">
-                    <CardHeader className="py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Badge variant={loan.status === "active" ? "default" : loan.status === "completed" ? "outline" : "secondary"}>
-                            {loan.status}
-                          </Badge>
-                          <span className="font-semibold">Loan ID: {loan.id}</span>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {loan.dateIssued ? `Issued: ${formatDate(loan.dateIssued)}` : 
-                           loan.dateApplied ? `Applied: ${formatDate(loan.dateApplied)}` : ""}
-                        </span>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Loan Type</p>
-                          <p className="text-base capitalize">{loan.type || "Personal"}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Amount</p>
-                          <p className="text-base">R {loan.amount?.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Interest Rate</p>
-                          <p className="text-base">{loan.interestRate}%</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Term</p>
-                          <p className="text-base">{loan.term} months</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-muted-foreground">Monthly Payment</p>
-                          <p className="text-base">R {loan.monthlyPayment?.toLocaleString()}</p>
-                        </div>
-                        {loan.status === "active" && (
-                          <div>
-                            <p className="text-sm font-medium text-muted-foreground">Remaining Payments</p>
-                            <p className="text-base">{loan.remainingPayments} of {loan.term}</p>
+                {user.loans && user.loans.length > 0 ? (
+                  user.loans.map((loan, index) => (
+                    <Card key={loan.id || index} className="border border-muted">
+                      <CardHeader className="py-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={loan.status === "active" ? "default" : loan.status === "completed" ? "outline" : "secondary"}>
+                              {loan.status}
+                            </Badge>
+                            <span className="font-semibold">Loan ID: {loan.id}</span>
                           </div>
-                        )}
-                        {loan.paidAmount > 0 && (
+                          <span className="text-sm text-muted-foreground">
+                            {loan.dateIssued ? `Issued: ${formatDate(loan.dateIssued)}` : 
+                            loan.dateApplied ? `Applied: ${formatDate(loan.dateApplied)}` : ""}
+                          </span>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
-                            <p className="text-sm font-medium text-muted-foreground">Amount Paid</p>
-                            <p className="text-base">R {loan.paidAmount?.toLocaleString()}</p>
+                            <p className="text-sm font-medium text-muted-foreground">Loan Type</p>
+                            <p className="text-base capitalize">{loan.type || "Personal"}</p>
                           </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Amount</p>
+                            <p className="text-base">R {loan.amount?.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Interest Rate</p>
+                            <p className="text-base">{loan.interestRate}%</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Term</p>
+                            <p className="text-base">{loan.term} months</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-muted-foreground">Monthly Payment</p>
+                            <p className="text-base">R {loan.monthlyPayment?.toLocaleString()}</p>
+                          </div>
+                          {loan.status === "active" && (
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">Remaining Payments</p>
+                              <p className="text-base">{loan.remainingPayments} of {loan.term}</p>
+                            </div>
+                          )}
+                          {loan.paidAmount > 0 && (
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">Amount Paid</p>
+                              <p className="text-base">R {loan.paidAmount?.toLocaleString()}</p>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <CreditCard className="h-10 w-10 mx-auto mb-4 text-muted-foreground/50" />
+                    <p>No active loans</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           )}
@@ -373,53 +383,24 @@ const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onEditClick }) 
           </CardHeader>
           {expandedSections.includes("documents") && (
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Document Type</TableHead>
-                    <TableHead>Date Uploaded</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {user.documents.map((doc, index) => (
-                    <TableRow key={doc.name + index}>
-                      <TableCell>{doc.name}</TableCell>
-                      <TableCell>{formatDate(doc.dateUploaded)}</TableCell>
-                      <TableCell>
-                        <Badge variant={doc.verificationStatus === "verified" ? "default" : "secondary"}>
-                          {doc.verificationStatus}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              View
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>{doc.name}</DialogTitle>
-                              <DialogDescription>Uploaded on {formatDate(doc.dateUploaded)}</DialogDescription>
-                            </DialogHeader>
-                            <div className="bg-muted/40 p-4 rounded-md flex items-center justify-center h-64">
-                              <p className="text-muted-foreground">Document preview would be displayed here</p>
-                            </div>
-                            <DialogFooter>
-                              <Button variant="outline">Download</Button>
-                              {doc.verificationStatus !== "verified" && (
-                                <Button>Mark as Verified</Button>
-                              )}
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="grid grid-cols-1 gap-4">
+                {user.documents && user.documents.length > 0 ? (
+                  user.documents.map((doc, index) => (
+                    <DocumentViewer 
+                      key={doc.id || index} 
+                      document={doc} 
+                      onDownload={(document) => {
+                        toast.success(`Downloading document: ${document.name}`);
+                      }}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileText className="h-10 w-10 mx-auto mb-4 text-muted-foreground/50" />
+                    <p>No documents uploaded</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           )}
         </Card>

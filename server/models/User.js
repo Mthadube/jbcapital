@@ -1,12 +1,10 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   firstName: { type: String, required: true },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String },
   phone: { type: String, required: true },
   idNumber: { type: String, required: true },
   dateOfBirth: { type: String },
@@ -71,30 +69,5 @@ UserSchema.pre('findOne', function() {
   this.populate('loans');
   this.populate('applications');
 });
-
-// Hash password before saving
-UserSchema.pre('save', async function(next) {
-  const user = this;
-  
-  // Only hash the password if it has been modified (or is new)
-  if (!user.isModified('password') || !user.password) return next();
-  
-  try {
-    // Generate a salt
-    const salt = await bcrypt.genSalt(10);
-    
-    // Hash the password along with the new salt
-    user.password = await bcrypt.hash(user.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Method to validate password
-UserSchema.methods.comparePassword = async function(candidatePassword) {
-  if (!this.password) return false;
-  return await bcrypt.compare(candidatePassword, this.password);
-};
 
 module.exports = mongoose.model('User', UserSchema); 

@@ -8,6 +8,7 @@ import DocumentManagement from "@/components/admin/DocumentManagement";
 import RiskAssessment from "@/components/admin/RiskAssessment";
 import ReportsAnalytics from "@/components/admin/ReportsAnalytics";
 import DataManagement from "@/components/admin/DataManagement";
+import ContractManagement from "@/components/admin/ContractManagement";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRequireAuth } from "@/utils/useRequireAuth";
 import {
@@ -34,14 +35,14 @@ import {
   Bell,
   Settings,
   ShieldAlert,
-  Database
+  Database,
+  FilePenLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/utils/AppDataContext";
 import { cn } from "@/lib/utils";
 import NotificationCenter from "@/components/admin/NotificationCenter";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import UserManagementSettings from "@/components/admin/UserManagementSettings";
 
 const AdminDashboard = () => {
   // Use the auth hook to require admin privileges
@@ -154,6 +155,20 @@ const AdminDashboard = () => {
                     >
                       <FileCheck className="h-4 w-4 text-teal-300" />
                       <span>Documents</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton 
+                      isActive={activeTab === "contracts"} 
+                      onClick={() => setActiveTab("contracts")}
+                      tooltip="Contracts"
+                      className={cn(
+                        "text-white hover:bg-white/10",
+                        activeTab === "contracts" && "bg-white/20 font-medium hover:bg-white/20"
+                      )}
+                    >
+                      <FilePenLine className="h-4 w-4 text-indigo-300" />
+                      <span>Contracts</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -314,6 +329,11 @@ const AdminDashboard = () => {
                   <FileCheck className="h-4 w-4 text-teal-500 mr-2" />
                   Documents
                 </TabsTrigger>
+                <TabsTrigger value="contracts" className="relative data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-700">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-300 rounded-full data-[state=inactive]:opacity-0" data-state={activeTab === "contracts" ? "active" : "inactive"} />
+                  <FilePenLine className="h-4 w-4 text-indigo-500 mr-2" />
+                  Contracts
+                </TabsTrigger>
                 <TabsTrigger value="reports" className="relative data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700">
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-orange-300 rounded-full data-[state=inactive]:opacity-0" data-state={activeTab === "reports" ? "active" : "inactive"} />
                   <BarChart4 className="h-4 w-4 text-orange-500 mr-2" />
@@ -344,6 +364,10 @@ const AdminDashboard = () => {
               
               <TabsContent value="documents" className="space-y-4">
                 <DocumentManagement />
+              </TabsContent>
+              
+              <TabsContent value="contracts" className="space-y-4">
+                <ContractManagement />
               </TabsContent>
               
               <TabsContent value="reports" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-5 duration-300">
@@ -377,52 +401,36 @@ const AdminDashboard = () => {
                     Configure system settings and preferences
                   </p>
                 </div>
-                <div className="grid gap-6">
-                  <Tabs defaultValue="users" className="w-full">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="general">General</TabsTrigger>
-                      <TabsTrigger value="users">User Management</TabsTrigger>
-                      <TabsTrigger value="notifications">Notifications</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="general">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>System Settings</CardTitle>
-                          <CardDescription>Configure general system settings</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-muted-foreground">
-                            General system settings coming soon.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                    
-                    <TabsContent value="users">
-                      <UserManagementSettings />
-                    </TabsContent>
-                    
-                    <TabsContent value="notifications">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Notification Preferences</CardTitle>
-                          <CardDescription>Configure how you receive notifications</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-muted-foreground">
-                            Notification settings are available in the Notifications tab.
-                          </p>
-                          <Button 
-                            className="mt-4" 
-                            onClick={() => setActiveTab("notifications")}
-                          >
-                            Go to Notifications
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Notification Preferences</CardTitle>
+                      <CardDescription>Configure how you receive notifications</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">
+                        Notification settings are available in the Notifications tab.
+                      </p>
+                      <Button 
+                        className="mt-4" 
+                        onClick={() => setActiveTab("notifications")}
+                      >
+                        Go to Notifications
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Profile Settings</CardTitle>
+                      <CardDescription>Update your admin profile</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">
+                        Profile management coming soon.
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
               </TabsContent>
             </Tabs>

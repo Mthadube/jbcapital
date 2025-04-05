@@ -118,10 +118,13 @@ const personalInfoBaseSchema = z.object({
   postalCode: z.string().regex(/^\d{4}$/, "Please enter a valid 4-digit postal code"),
 });
 
-export const personalInfoSchema = personalInfoBaseSchema.refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+export const personalInfoSchema = personalInfoBaseSchema.refine(
+  (data) => data.password === data.confirmPassword, 
+  {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  }
+);
 
 // Employment Information Schema
 export const employmentInfoSchema = z.object({

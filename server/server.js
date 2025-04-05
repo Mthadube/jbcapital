@@ -36,7 +36,6 @@ const initializeAdminUser = async () => {
         firstName: "Admin",
         lastName: "User",
         email: "admin@jbcapital.com",
-        password: "admin123", // This will be hashed by the pre-save hook
         phone: "+27 83 456 7890",
         idNumber: "8001015012089",
         dateOfBirth: "1980-01-01",
@@ -200,24 +199,6 @@ app.post('/api/migrate-data', async (req, res) => {
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ status: 'healthy', time: new Date().toISOString() });
-});
-
-// Temporary route to reset admin password (DELETE THIS IN PRODUCTION)
-app.get('/api/reset-admin', async (req, res) => {
-  try {
-    const admin = await User.findOne({ email: 'admin@jbcapital.com', role: 'admin' });
-    if (!admin) {
-      return res.status(404).json({ message: 'Admin user not found' });
-    }
-    
-    admin.password = 'admin123';
-    await admin.save();
-    
-    return res.json({ message: 'Admin password reset to admin123' });
-  } catch (error) {
-    console.error('Error resetting admin password:', error);
-    return res.status(500).json({ message: 'Error resetting admin password' });
-  }
 });
 
 // Start server

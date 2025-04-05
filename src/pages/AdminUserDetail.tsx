@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { scrollToTop } from "@/components/ScrollToTop";
 import UserProfileView from "@/components/admin/UserProfileView";
+import { useAppData } from "@/utils/AppDataContext";
 
 const AdminUserDetail = () => {
   const { id } = useParams();
@@ -25,127 +26,24 @@ const AdminUserDetail = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editSection, setEditSection] = useState("");
 
+  const { getUserById } = useAppData();
+
   useEffect(() => {
     scrollToTop(false);
     
-    // Simulate API fetch for user data
+    // Get user data from context instead of using mock data
+    setLoading(true);
+    
     setTimeout(() => {
-      // Mock user data for demonstration
-      setUser({
-        id: id,
-        firstName: "David",
-        lastName: "Johnson",
-        email: "david.johnson@jbcapital.com",
-        phone: "+27 71 234 5678",
-        role: "Loan Officer",
-        status: "Active",
-        lastActive: "2023-06-21 14:30",
-        idNumber: "8506155012089",
-        dateOfBirth: "1985-06-15",
-        gender: "Male",
-        maritalStatus: "Married",
-        dependents: 2,
-        address: "123 Main Street",
-        suburb: "Sandton", 
-        city: "Johannesburg",
-        state: "Gauteng",
-        zipCode: "2196",
-        country: "South Africa",
-        employmentStatus: "employed",
-        employmentType: "full-time",
-        employmentSector: "Finance",
-        employerName: "JB Capital",
-        jobTitle: "Loan Officer",
-        yearsEmployed: 5,
-        monthlyIncome: 45000,
-        paymentDate: "25th of each month",
-        bankName: "Standard Bank",
-        accountType: "cheque",
-        bankingPeriod: 8,
-        creditScore: 720,
-        existingLoans: true,
-        existingLoanAmount: 150000,
-        monthlyDebt: 12000,
-        rentMortgage: 8000,
-        carPayment: 4500,
-        groceries: 3500,
-        utilities: 2000,
-        insurance: 1500,
-        otherExpenses: 3000,
-        totalMonthlyExpenses: 22500,
-        accountStatus: "active",
-        registrationDate: "2022-03-15",
-        profileCompletionPercentage: 100,
-        incompleteProfileItems: [],
-        activity: [
-          { type: "login", timestamp: "2023-06-21 14:30", details: "Logged in from Johannesburg" },
-          { type: "profile_update", timestamp: "2023-06-18 10:15", details: "Updated contact information" },
-          { type: "document_upload", timestamp: "2023-06-15 09:45", details: "Uploaded bank statement" },
-          { type: "login", timestamp: "2023-06-12 08:30", details: "Logged in from Pretoria" },
-          { type: "password_change", timestamp: "2023-06-05 16:20", details: "Changed account password" }
-        ],
-        loans: [
-          {
-            id: "LOAN1234",
-            type: "personal",
-            amount: 150000,
-            interestRate: 15.5,
-            term: 36,
-            monthlyPayment: 5250,
-            status: "active",
-            dateApplied: "2023-01-15",
-            dateIssued: "2023-01-25",
-            remainingPayments: 30
-          },
-          {
-            id: "LOAN5678",
-            type: "home",
-            amount: 750000,
-            interestRate: 12.75,
-            term: 240,
-            monthlyPayment: 9375,
-            status: "completed",
-            dateApplied: "2018-05-10",
-            dateIssued: "2018-05-25",
-            dateCompleted: "2022-12-10"
-          }
-        ],
-        documents: [
-          {
-            name: "ID Document",
-            type: "id_document",
-            dateUploaded: "2022-03-15",
-            verificationStatus: "verified"
-          },
-          {
-            name: "Proof of Residence",
-            type: "proof_of_residence",
-            dateUploaded: "2022-03-15",
-            verificationStatus: "verified"
-          },
-          {
-            name: "Bank Statement - April 2023",
-            type: "bank_statement",
-            dateUploaded: "2023-05-05",
-            verificationStatus: "verified"
-          },
-          {
-            name: "Payslip - May 2023",
-            type: "payslip",
-            dateUploaded: "2023-06-10",
-            verificationStatus: "verified"
-          }
-        ],
-        notes: [
-          { date: "2023-06-20", author: "Sarah Miller", content: "Followed up on loan application status" },
-          { date: "2023-05-15", author: "Mark Williams", content: "Verified employment details and income" },
-          { date: "2023-04-12", author: "Lisa Chen", content: "Initial account setup and verification complete" }
-        ]
-      });
-      
+      if (id) {
+        const foundUser = getUserById(id);
+        if (foundUser) {
+          setUser(foundUser);
+        }
+      }
       setLoading(false);
-    }, 1000);
-  }, [id]);
+    }, 300);
+  }, [id, getUserById]);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -377,63 +275,73 @@ const AdminUserDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {user.loans.map((loan, index) => (
-                        <Card key={index} className="border border-muted">
-                          <CardHeader className="py-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Badge variant={loan.status === "active" ? "default" : loan.status === "completed" ? "outline" : "secondary"}>
-                                  {loan.status}
-                                </Badge>
-                                <span className="font-semibold">Loan ID: {loan.id}</span>
-                              </div>
-                              <span className="text-sm text-muted-foreground">
-                                {loan.dateIssued ? `Issued: ${formatDate(loan.dateIssued)}` : 
-                                 loan.dateApplied ? `Applied: ${formatDate(loan.dateApplied)}` : ""}
-                              </span>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground">Loan Type</p>
-                                <p className="text-base capitalize">{loan.type || "Personal"}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground">Amount</p>
-                                <p className="text-base">R {loan.amount?.toLocaleString()}</p>
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground">Interest Rate</p>
-                                <p className="text-base">{loan.interestRate}%</p>
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground">Term</p>
-                                <p className="text-base">{loan.term} months</p>
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground">Monthly Payment</p>
-                                <p className="text-base">R {loan.monthlyPayment?.toLocaleString()}</p>
-                              </div>
-                              {loan.status === "active" && (
-                                <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Remaining Payments</p>
-                                  <p className="text-base">{loan.remainingPayments} of {loan.term}</p>
+                      {user.loans && user.loans.length > 0 ? (
+                        user.loans.map((loan, index) => (
+                          <Card key={index} className="border border-muted">
+                            <CardHeader className="py-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={
+                                    loan.status === "active" ? "default" : 
+                                    loan.status === "completed" ? "outline" : 
+                                    "secondary"
+                                  }>
+                                    {loan.status}
+                                  </Badge>
+                                  <span className="font-semibold">Loan ID: {loan.id}</span>
                                 </div>
-                              )}
-                              {loan.dateCompleted && (
+                                <span className="text-sm text-muted-foreground">
+                                  {loan.dateIssued ? formatDate(loan.dateIssued) : 
+                                  loan.dateApplied ? formatDate(loan.dateApplied) : ""}
+                                </span>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
-                                  <p className="text-sm font-medium text-muted-foreground">Completed Date</p>
-                                  <p className="text-base">{formatDate(loan.dateCompleted)}</p>
+                                  <p className="text-sm font-medium text-muted-foreground">Loan Type</p>
+                                  <p className="text-base capitalize">{loan.type || "Personal"}</p>
                                 </div>
-                              )}
-                            </div>
-                            <div className="mt-4 flex justify-end">
-                              <Button variant="outline" size="sm">View Details</Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Amount</p>
+                                  <p className="text-base">R{loan.amount?.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Interest Rate</p>
+                                  <p className="text-base">{loan.interestRate}%</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Term</p>
+                                  <p className="text-base">{loan.term} months</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Monthly Payment</p>
+                                  <p className="text-base">R{loan.monthlyPayment?.toLocaleString()}</p>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                                  <Badge variant={
+                                    loan.status === "active" ? "default" : 
+                                    loan.status === "completed" ? "outline" : 
+                                    loan.status === "rejected" ? "destructive" : 
+                                    "secondary"
+                                  }>
+                                    {loan.status}
+                                  </Badge>
+                                </div>
+                              </div>
+                              
+                              <div className="flex justify-end mt-4">
+                                <Button variant="outline" size="sm" onClick={() => navigate(`/admin/application/${loan.id}`)}>
+                                  View Details
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No loans found for this user.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -449,36 +357,41 @@ const AdminUserDetail = () => {
                         Request Document
                       </Button>
                     </div>
-                    <CardDescription>User submitted documents and verification status</CardDescription>
+                    <CardDescription>Documents uploaded by the user</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="overflow-hidden rounded-md border">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="bg-muted/50">
-                            <th className="p-3 text-left text-sm font-medium text-muted-foreground">Document</th>
-                            <th className="p-3 text-left text-sm font-medium text-muted-foreground">Date Uploaded</th>
-                            <th className="p-3 text-left text-sm font-medium text-muted-foreground">Status</th>
-                            <th className="p-3 text-right text-sm font-medium text-muted-foreground">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {user.documents.map((doc, index) => (
-                            <tr key={index} className="border-t border-border">
-                              <td className="p-3 text-sm">{doc.name}</td>
-                              <td className="p-3 text-sm">{formatDate(doc.dateUploaded)}</td>
-                              <td className="p-3 text-sm">
-                                <Badge variant={doc.verificationStatus === "verified" ? "default" : "secondary"}>
-                                  {doc.verificationStatus}
-                                </Badge>
-                              </td>
-                              <td className="p-3 text-sm text-right">
-                                <Button variant="outline" size="sm">View</Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="space-y-4">
+                      {user.documents && user.documents.length > 0 ? (
+                        user.documents.map((doc, index) => (
+                          <div key={index} className="flex items-start border-b border-border last:border-0 pb-4 last:pb-0">
+                            <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center mr-3">
+                              <FileText className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between">
+                                <div>
+                                  <h4 className="font-medium">{doc.name}</h4>
+                                  <p className="text-xs text-muted-foreground">
+                                    {doc.type} • Uploaded on {formatDate(doc.dateUploaded)}
+                                  </p>
+                                </div>
+                                <div className="flex gap-2 items-start">
+                                  <Badge variant={
+                                    doc.verificationStatus === "verified" ? "default" : 
+                                    doc.verificationStatus === "rejected" ? "destructive" : 
+                                    "secondary"
+                                  }>
+                                    {doc.verificationStatus}
+                                  </Badge>
+                                  <Button variant="outline" size="sm">View</Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No documents found for this user.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -492,30 +405,34 @@ const AdminUserDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {user.activity.map((activity, index) => (
-                        <div key={index} className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
-                          <div className={`rounded-full p-2 ${
-                            activity.type === 'login' ? 'bg-green-100' : 
-                            activity.type === 'profile_update' ? 'bg-blue-100' : 
-                            activity.type === 'document_upload' ? 'bg-purple-100' : 
-                            activity.type === 'password_change' ? 'bg-amber-100' : 'bg-gray-100'
-                          }`}>
-                            {activity.type === 'login' && <User className="h-4 w-4 text-green-700" />}
-                            {activity.type === 'profile_update' && <Edit className="h-4 w-4 text-blue-700" />}
-                            {activity.type === 'document_upload' && <FileText className="h-4 w-4 text-purple-700" />}
-                            {activity.type === 'password_change' && <Shield className="h-4 w-4 text-amber-700" />}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between">
-                              <p className="font-medium">{activity.details}</p>
-                              <p className="text-sm text-muted-foreground">{activity.timestamp}</p>
+                      {user.activity && user.activity.length > 0 ? (
+                        user.activity.map((activity, index) => (
+                          <div key={index} className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
+                            <div className={`rounded-full p-2 ${
+                              activity.type === 'login' ? 'bg-green-100' : 
+                              activity.type === 'profile_update' ? 'bg-blue-100' : 
+                              activity.type === 'document_upload' ? 'bg-purple-100' : 
+                              activity.type === 'password_change' ? 'bg-amber-100' : 'bg-gray-100'
+                            }`}>
+                              {activity.type === 'login' && <User className="h-4 w-4 text-green-700" />}
+                              {activity.type === 'profile_update' && <Edit className="h-4 w-4 text-blue-700" />}
+                              {activity.type === 'document_upload' && <FileText className="h-4 w-4 text-purple-700" />}
+                              {activity.type === 'password_change' && <Shield className="h-4 w-4 text-amber-700" />}
                             </div>
-                            <p className="text-sm text-muted-foreground capitalize">
-                              {activity.type.replace('_', ' ')}
-                            </p>
+                            <div className="flex-1">
+                              <div className="flex justify-between">
+                                <p className="font-medium">{activity.details}</p>
+                                <p className="text-sm text-muted-foreground">{activity.timestamp}</p>
+                              </div>
+                              <p className="text-sm text-muted-foreground capitalize">
+                                {activity.type && activity.type.replace('_', ' ')}
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No activity records found.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -535,15 +452,19 @@ const AdminUserDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {user.notes.map((note, index) => (
-                        <div key={index} className="border border-border rounded-md p-4">
-                          <div className="flex justify-between mb-2">
-                            <p className="font-medium">{note.author}</p>
-                            <p className="text-sm text-muted-foreground">{note.date}</p>
+                      {user.notes && user.notes.length > 0 ? (
+                        user.notes.map((note, index) => (
+                          <div key={index} className="border border-border rounded-md p-4">
+                            <div className="flex justify-between mb-2">
+                              <p className="font-medium">{note.author}</p>
+                              <p className="text-sm text-muted-foreground">{note.date}</p>
+                            </div>
+                            <p className="text-sm">{note.content}</p>
                           </div>
-                          <p className="text-sm">{note.content}</p>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No notes available for this user.</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
