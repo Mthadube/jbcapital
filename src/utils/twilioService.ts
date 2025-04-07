@@ -1,12 +1,5 @@
 import axios from 'axios';
-
-// Twilio credentials from environment variables
-const TWILIO_ACCOUNT_SID = import.meta.env.VITE_TWILIO_ACCOUNT_SID || 'TWILIO_ACCOUNT_SID_PLACEHOLDER';
-const TWILIO_AUTH_TOKEN = import.meta.env.VITE_TWILIO_AUTH_TOKEN || 'TWILIO_AUTH_TOKEN_PLACEHOLDER';
-const TWILIO_PHONE_NUMBER = import.meta.env.VITE_TWILIO_PHONE_NUMBER || '+15555555555';
-
-// Base64 encode the SID and Auth Token for basic auth
-const basicAuth = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+import { API_BASE_URL } from './api';
 
 // Message types
 export const MESSAGE_TYPES = {
@@ -18,48 +11,37 @@ export const MESSAGE_TYPES = {
 };
 
 /**
- * Send an SMS message using Twilio API directly
- * @param to Phone number to send to (must include country code)
+ * Send an SMS message using our backend API that connects to Twilio
+ * @param to Phone number to send to
  * @param message Text message content
  * @returns Promise with the result of the SMS send operation
  */
 export const sendSMS = async (to: string, message: string): Promise<any> => {
   try {
-    // Format the phone number to ensure it has the country code
-    const formattedPhone = formatPhoneNumber(to);
+    console.log(`Attempting to send SMS to ${to}`);
     
-    console.log(`Attempting to send SMS to ${formattedPhone}`);
-    
-    // Create the request body in the format Twilio expects
-    const params = new URLSearchParams();
-    params.append('To', formattedPhone);
-    params.append('From', TWILIO_PHONE_NUMBER);
-    params.append('Body', message);
-    
-    // Send the request to Twilio's API
+    // Send the request to our backend API endpoint
     const response = await axios({
       method: 'post',
-      url: `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-      data: params,
+      url: `${API_BASE_URL}/sms/send`,
+      data: { to, message },
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${basicAuth}`
-      },
-      validateStatus: (status) => status < 500, // Don't throw on 4xx errors to handle them manually
+        'Content-Type': 'application/json',
+      }
     });
     
-    if (response.status >= 400) {
-      console.error('Twilio API error:', response.status, response.data);
+    if (!response.data.success) {
+      console.error('SMS API error:', response.data.error);
       return {
         success: false,
-        error: response.data?.message || `API Error: ${response.status}`
+        error: response.data.error || 'SMS sending failed'
       };
     }
     
     console.log('SMS sent successfully:', response.data);
     return {
       success: true,
-      data: response.data
+      data: response.data.data
     };
   } catch (error) {
     console.error('Error sending SMS:', error.response?.data || error.message);
@@ -68,47 +50,6 @@ export const sendSMS = async (to: string, message: string): Promise<any> => {
       error: error.response?.data || error.message
     };
   }
-};
-
-/**
- * Format a phone number to ensure it has the country code
- * @param phoneNumber Phone number to format
- * @returns Formatted phone number with country code
- */
-const formatPhoneNumber = (phoneNumber: string): string => {
-  console.log(`Formatting phone number: ${phoneNumber}`);
-  
-  // Remove any non-digit characters
-  let digits = phoneNumber.replace(/\D/g, '');
-  console.log(`After removing non-digits: ${digits}`);
-  
-  // Handle special cases
-  if (digits.length === 0) {
-    console.error('Empty phone number after formatting');
-    // Return a default test number or throw an error
-    return '+27000000000';  // Default test number
-  }
-  
-  // South African mobile numbers start with 0 followed by 6, 7, or 8
-  // If the number starts with 0, replace it with the South Africa country code +27
-  if (digits.startsWith('0')) {
-    digits = `+27${digits.substring(1)}`;
-    console.log(`Applied SA country code: ${digits}`);
-  } 
-  // If starts with 27 (without +), add + prefix
-  else if (digits.startsWith('27')) {
-    digits = `+${digits}`;
-    console.log(`Added + to country code: ${digits}`);
-  }
-  // If no country code, assume South Africa
-  else if (!digits.startsWith('+')) {
-    // For South African numbers without leading 0 or country code
-    digits = `+27${digits}`;
-    console.log(`Added SA country code: ${digits}`);
-  }
-  
-  console.log(`Final formatted number: ${digits}`);
-  return digits;
 };
 
 /**
@@ -212,6 +153,37 @@ export const sendOTP = async (
   phoneNumber: string,
   otp: string
 ): Promise<any> => {
-  const message = `Your JB Capital verification code is: ${otp}. This code will expire in 10 minutes. Do not share this code with anyone.`;
-  return sendSMS(phoneNumber, message);
-};
+  try {
+    console.log(`Attempting to send OTP to ${phoneNumber}`);
+    
+    // Use the dedicated OTP endpoint
+    const response = await axios({
+      method: 'post',
+      url: `${API_BASE_URL}/sms/send-otp`,
+      data: { phoneNumber, otp },
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!response.data.success) {
+      console.error('OTP API error:', response.data.error);
+      return {
+        success: false,
+        error: response.data.error || 'OTP sending failed'
+      };
+    }
+    
+    console.log('OTP sent successfully:', response.data);
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error) {
+    console.error('Error sending OTP:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data || error.message
+    };
+  }
+}; 

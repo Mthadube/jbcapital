@@ -6,24 +6,6 @@ A financial services application for loan management and user document processin
 
 This application now uses MongoDB Atlas for data persistence. The connection string is configured in the `.env` file.
 
-## Environment Variables
-
-This application requires several environment variables to function properly. These should be set in a `.env` file at the root of the project. An example file (`.env.example`) is provided for reference.
-
-```
-# Google Maps API Key for Places Autocomplete
-VITE_GOOGLE_MAPS_API_KEY="your_google_maps_api_key"
-
-# MongoDB Connection String
-MONGODB_URI="your_mongodb_connection_string"
-MONGODB_DB_NAME="your_database_name"
-
-# Twilio credentials
-VITE_TWILIO_ACCOUNT_SID="your_twilio_account_sid"
-VITE_TWILIO_AUTH_TOKEN="your_twilio_auth_token"
-VITE_TWILIO_PHONE_NUMBER="your_twilio_phone_number"
-```
-
 ## Setup Instructions
 
 1. Install dependencies for the client:
@@ -73,7 +55,7 @@ If you encounter the error "Admin user not found in database", please ensure:
 1. The MongoDB connection is configured in the `.env` file:
 
 ```
-MONGODB_URI="your_mongodb_connection_string"
+MONGODB_URI="mongodb+srv://mthadube:uDRRd9wntR1F0FJx@cluster0.hagnbde.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 MONGODB_DB_NAME="jbcapital"
 ```
 
@@ -82,23 +64,6 @@ MONGODB_DB_NAME="jbcapital"
    - Navigate to the "Database" tab in the admin dashboard
    - Click "Check Connection" to verify the MongoDB connection
    - Click "Migrate Data" to populate the database with initial data
-
-## Deployment to Render
-
-This application is configured for deployment on Render. The `render.yaml` file provides the necessary configuration. To deploy:
-
-1. Connect your GitHub repository to Render
-2. Create a new Web Service selecting the `main` branch
-3. Set the environment variables in the Render dashboard (see `.env.example` for required variables)
-4. Deploy the service
-
-Note: The application is set up to use the `render-build` script for building and the `start` script for running in production.
-
-## Security Notes
-
-- **Never commit sensitive credentials** to the repository. All sensitive information should be in environment variables.
-- The application now has enhanced security for phone verification using OTP codes.
-- The `.gitignore` file is configured to exclude all environment files except `.env.example`.
 
 ## Application Structure
 
@@ -113,7 +78,6 @@ Note: The application is set up to use the `render-build` script for building an
 - **Backend**: Node.js, Express
 - **Database**: MongoDB Atlas (cloud-hosted)
 - **Authentication**: Basic authentication with localStorage persistence
-- **SMS/Verification**: Twilio API for SMS messages and phone verification
 
 ## Features
 
@@ -123,8 +87,6 @@ Note: The application is set up to use the `render-build` script for building an
 - Admin dashboard with data analytics
 - Persistent data storage with MongoDB
 - Document management system with upload, preview, and verification
-- Phone number verification with OTP
-- Dark mode support in admin dashboard
 
 ## API Endpoints
 
