@@ -1,7 +1,10 @@
 import { User, Document, Loan, Application, Contract } from './AppDataContext';
 
-// API base URL
-const API_BASE_URL = 'http://localhost:5001/api';
+// API base URL - use the current origin in production, fallback to localhost in development
+const isProduction = window.location.hostname !== 'localhost';
+const API_BASE_URL = isProduction 
+  ? `${window.location.origin}/api` 
+  : 'http://localhost:5001/api';
 
 // Types for API responses
 type ApiResponse<T> = {
