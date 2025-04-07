@@ -1,0 +1,87 @@
+/* Glass Card Styling */
+.glass-card {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.glass-card-inner {
+  background-color: rgba(200, 200, 255, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(200, 200, 255, 0.2);
+}
+
+/* Button Styling */
+.btn-primary {
+  background-color: var(--primary);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--foreground);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-secondary:hover {
+  background-color: var(--secondary-dark);
+}
+
+/* Animation */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.animate-fade-in-delayed {
+  animation: fadeIn 0.3s ease-in-out 0.2s forwards;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Custom Container Width */
+.container-custom {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Layout Fixes */
+.main-content {
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-container {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+/* Tab Styling */
+.tab-content {
+  width: 100%;
+  max-width: 100%;
+} 
