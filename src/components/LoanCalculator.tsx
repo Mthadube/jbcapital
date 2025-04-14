@@ -15,7 +15,7 @@ interface LoanCalculatorProps {
 }
 
 const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
-  const [loanAmount, setLoanAmount] = useState(25000);
+  const [loanAmount, setLoanAmount] = useState(10000);
   const [loanDuration, setLoanDuration] = useState(3);
   const [monthlyPayment, setMonthlyPayment] = useState(0);
   const [totalInterest, setTotalInterest] = useState(0);
@@ -23,11 +23,9 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
   const [showBreakdown, setShowBreakdown] = useState(false);
   
   const interestRate = 28.75; // Annual interest rate (%)
-  const initiationFee = Math.min(1050 + (loanAmount * 0.0175), 5000); // R1050 + 1.75% of loan amount, capped at R5000
-  const monthlyServiceFee = 69; // Monthly service fee
+  const initiationFee = loanAmount * 0.10; // 10% of the principal amount
+  const monthlyServiceFee = 60; // Monthly service fee
   const totalServiceFee = monthlyServiceFee * loanDuration;
-  const monthlyInsurance = loanAmount * 0.00175; // Credit life insurance rate of 0.175% of loan amount
-  const totalInsurance = monthlyInsurance * loanDuration;
   
   const formatter = new Intl.NumberFormat('en-ZA', {
     style: 'currency',
@@ -41,29 +39,28 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
   };
   
   useEffect(() => {
-    // Monthly interest rate
-    const monthlyRate = interestRate / 100 / 12;
+    // Calculate total interest based on the 28.75% annual rate
+    const interestFactor = (interestRate / 100) * (loanDuration / 12);
+    const interest = loanAmount * interestFactor;
     
-    // Calculate monthly payment using the loan formula
-    const x = Math.pow(1 + monthlyRate, loanDuration);
-    const monthly = (loanAmount * x * monthlyRate) / (x - 1);
+    // Calculate monthly payment (principal + interest) / duration
+    const monthly = (loanAmount + interest) / loanDuration;
     
-    // Total payment over the loan lifetime
-    const total = monthly * loanDuration;
-    const interest = total - loanAmount;
+    // Total repayment includes principal, interest, and fees
+    const total = loanAmount + interest + initiationFee + totalServiceFee;
     
     setMonthlyPayment(isNaN(monthly) ? 0 : monthly);
     setTotalInterest(isNaN(interest) ? 0 : interest);
-    setTotalRepayment(isNaN(total) ? 0 : total + initiationFee + totalServiceFee + totalInsurance);
-  }, [loanAmount, loanDuration, interestRate, initiationFee, totalServiceFee, totalInsurance]);
+    setTotalRepayment(isNaN(total) ? 0 : total);
+  }, [loanAmount, loanDuration, interestRate, initiationFee, totalServiceFee]);
   
   const chartData = [
     { name: 'Principal', value: loanAmount, color: '#0066cc' },
     { name: 'Interest', value: totalInterest, color: '#9333ea' },
-    { name: 'Fees', value: initiationFee + totalServiceFee + totalInsurance, color: '#22c55e' }
+    { name: 'Fees', value: initiationFee + totalServiceFee, color: '#22c55e' }
   ];
 
-  const totalMonthlyPayment = monthlyPayment + monthlyServiceFee + monthlyInsurance;
+  const totalMonthlyPayment = monthlyPayment + monthlyServiceFee;
   
   const handleApplyNow = () => {
     // Save loan calculator data before navigating to application
@@ -76,7 +73,7 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
       totalRepayment,
       initiationFee,
       monthlyServiceFee,
-      monthlyInsurance
+      monthlyInsurance: 0 // Set to 0 as we no longer use insurance in the calculation
     });
   };
   
@@ -153,20 +150,16 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
                   <span className="font-medium">{formatAmount(loanAmount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-foreground/70">Total Interest</span>
+                  <span className="text-foreground/70">Total Interest ({interestRate}%)</span>
                   <span className="font-medium">{formatAmount(totalInterest)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground/70">Initiation Fee</span>
-                  <span className="font-medium">{formatAmount(initiationFee)}</span>
+                  <span className="font-medium">{formatAmount(initiationFee)} (10% of principal)</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-foreground/70">Monthly Service Fee</span>
                   <span className="font-medium">{formatAmount(monthlyServiceFee)}/month</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-foreground/70">Monthly Insurance</span>
-                  <span className="font-medium">{formatAmount(monthlyInsurance)}/month</span>
                 </div>
                 <div className="border-t border-primary/10 pt-2 mt-2">
                   <div className="flex justify-between font-medium">
@@ -177,6 +170,9 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
                     <span>Total Cost of Credit</span>
                     <span className="text-primary">{formatAmount(totalRepayment)}</span>
                   </div>
+                </div>
+                <div className="text-xs text-foreground/60 mt-2 italic">
+                  <p>Note: The same calculation model applies proportionally to all loan amounts and terms.</p>
                 </div>
               </div>
             )}

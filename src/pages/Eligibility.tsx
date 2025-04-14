@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label';
 
 const eligibilitySchema = z.object({
   annualIncome: z.number().min(0, "Income cannot be negative"),
-  creditScore: z.number().min(300, "Credit score must be at least 300").max(850, "Credit score must be below 850"),
   monthlyDebt: z.number().min(0, "Monthly debt cannot be negative"),
   employmentStatus: z.enum(["employed", "self-employed", "unemployed", "retired"], {
     errorMap: () => ({ message: "Please select an employment status" }),
@@ -33,7 +32,6 @@ const Eligibility: React.FC = () => {
     resolver: zodResolver(eligibilitySchema),
     defaultValues: {
       annualIncome: 50000,
-      creditScore: 700,
       monthlyDebt: 1500,
       employmentStatus: "employed",
       loanAmount: 25000,
@@ -43,7 +41,6 @@ const Eligibility: React.FC = () => {
   
   const onSubmit = (data: EligibilityFormData) => {
     const debtToIncomeRatio = (data.monthlyDebt * 12) / data.annualIncome;
-    const creditScorePercentile = (data.creditScore - 300) / (850 - 300);
     const employmentFactor = 
       data.employmentStatus === "employed" ? 1 : 
       data.employmentStatus === "self-employed" ? 0.9 : 
@@ -54,9 +51,8 @@ const Eligibility: React.FC = () => {
       Math.max(
         0,
         Math.round(
-          (creditScorePercentile * 50) + 
-          ((1 - Math.min(0.5, debtToIncomeRatio) / 0.5) * 30) + 
-          (employmentFactor * 20)
+          ((1 - Math.min(0.5, debtToIncomeRatio) / 0.5) * 60) + 
+          (employmentFactor * 40)
         )
       )
     );
@@ -126,30 +122,6 @@ const Eligibility: React.FC = () => {
                     />
                     {errors.annualIncome && (
                       <p className="text-sm text-destructive mt-1">{errors.annualIncome.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="creditScore" className="label">Credit Score</Label>
-                    <Controller
-                      name="creditScore"
-                      control={control}
-                      render={({ field: { value, onChange, ...rest } }) => (
-                        <Input 
-                          id="creditScore"
-                          type="number"
-                          className={`form-input ${errors.creditScore ? 'border-destructive' : ''}`}
-                          placeholder="700"
-                          value={value || ''}
-                          onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)}
-                          min={300}
-                          max={850}
-                          {...rest}
-                        />
-                      )}
-                    />
-                    {errors.creditScore && (
-                      <p className="text-sm text-destructive mt-1">{errors.creditScore.message}</p>
                     )}
                   </div>
                   

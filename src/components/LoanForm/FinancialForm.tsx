@@ -76,7 +76,6 @@ const FinancialForm: React.FC = () => {
     updateFormData({
       bankName: data.bankName,
       accountType: data.accountType,
-      accountNumber: data.accountNumber,
       bankingPeriod: data.bankingPeriod,
       existingLoans: data.existingLoans,
       existingLoanAmount: data.existingLoanAmount,
@@ -234,32 +233,6 @@ const FinancialForm: React.FC = () => {
         <h2 className="heading-md mb-6">Financial Overview</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Label htmlFor="creditScore" className="label">Credit Score</Label>
-            <Controller
-              name="creditScore"
-              control={control}
-              render={({ field }) => (
-                <Input 
-                  id="creditScore"
-                  type="number"
-                  min="0"
-                  max="999"
-                  className={`form-input ${errors.creditScore ? 'border-destructive' : ''}`}
-                  placeholder="Your credit score"
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
-                />
-              )}
-            />
-            {errors.creditScore && (
-              <p className="text-sm text-destructive mt-1">{errors.creditScore.message}</p>
-            )}
-            <p className="text-sm text-muted-foreground mt-1">
-              If you don't know your credit score, you can leave it at 0.
-            </p>
-          </div>
-          
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Controller

@@ -171,7 +171,7 @@ export const employmentInfoSchema = z.object({
 
 // Financial Information Schema
 export const financialInfoSchema = z.object({
-  creditScore: z.number().min(300, "Credit score must be at least 300").max(850, "Credit score cannot exceed 850"),
+  creditScore: z.number().optional(),
   existingLoans: z.boolean(),
   existingLoanAmount: z.number().min(0, "Loan amount cannot be negative"),
   monthlyDebt: z.number().min(0, "Monthly debt cannot be negative"),
@@ -185,6 +185,7 @@ export const financialInfoSchema = z.object({
   savings: z.number().min(0, "Amount cannot be negative"),
   bankName: z.string().optional(),
   accountType: z.string().optional(),
+  accountNumber: z.string().optional(),
   bankingPeriod: z.number().min(0, "Banking period cannot be negative").optional(),
 });
 

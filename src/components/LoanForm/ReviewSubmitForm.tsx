@@ -79,7 +79,6 @@ const ReviewSubmitForm: React.FC = () => {
       accountType: formData.accountType,
       accountNumber: '',
       bankingPeriod: formData.bankingPeriod,
-      creditScore: formData.creditScore || 700,
       existingLoans: formData.existingLoans,
       existingLoanAmount: formData.existingLoanAmount || 0,
       monthlyDebt: formData.monthlyDebt || 0,
@@ -162,8 +161,24 @@ const ReviewSubmitForm: React.FC = () => {
         }
       }
       
-      // Calculate monthly payment
-      const monthlyPayment = formData.loanCalculation?.monthlyPayment || (formData.loanAmount * 0.035);
+      // Calculate monthly payment function
+      const calculateMonthlyPayment = () => {
+        const loanAmount = formData.loanAmount || 0;
+        const loanTerm = formData.loanTerm || 3;
+        const interestRate = 28.75; // Fixed interest rate
+        
+        // Calculate total interest
+        const interestFactor = (interestRate / 100) * (loanTerm / 12);
+        const interest = loanAmount * interestFactor;
+        
+        // Calculate monthly payment
+        const monthlyPayment = (loanAmount + interest) / loanTerm;
+        
+        return monthlyPayment;
+      };
+      
+      // Get monthly payment from calculation
+      const monthlyPayment = formData.loanCalculation?.monthlyPayment || calculateMonthlyPayment();
       
       // Create application
       const applicationId = `APP-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
