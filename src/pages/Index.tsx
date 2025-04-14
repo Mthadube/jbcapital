@@ -213,9 +213,8 @@ const Index: React.FC = () => {
         </section>
         
         {/* Loan Types Section */}
-        <section className="py-24 bg-white relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-          <div className="container-custom relative z-10">
+        <section className="py-20 bg-white">
+          <div className="container-custom">
             <div className="text-center mb-16">
               <h2 className="heading-lg">We Offer a Wide Variety of Loans</h2>
               <p className="text-lg text-foreground/70 max-w-2xl mx-auto mt-4">
@@ -224,7 +223,7 @@ const Index: React.FC = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Personal Loan Card */}
               <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
                 <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-500 mb-4">
@@ -321,7 +320,13 @@ const Index: React.FC = () => {
         {/* CTA Section */}
         <section className="py-24 relative overflow-hidden">
           {/* Background image */}
-          <div className="absolute inset-0 bg-happy-people opacity-60" style={{ filter: 'brightness(0.4)' }}></div>
+          <div className="absolute inset-0" style={{ 
+            backgroundImage: 'url("/happy-people.jpg")', 
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'brightness(0.4)',
+            opacity: 0.6
+          }}></div>
           
           {/* Overlay gradient */}
           <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-blue-900/80 mix-blend-multiply"></div>
