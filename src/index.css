@@ -173,9 +173,24 @@
   
   /* Happy people background */
   .bg-happy-people {
-    background-image: url('happy-people.jpg');
+    background-image: url('/happy-people.jpg');
     background-size: cover;
     background-position: center;
+  }
+
+  /* Loans section background */
+  .bg-loans-pattern {
+    background-color: #f8fafc;
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+  }
+  
+  .dark .bg-loans-pattern {
+    background-color: #0f172a;
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
   }
 
   /* Step cards */

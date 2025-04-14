@@ -274,9 +274,9 @@ const ReviewSubmitForm: React.FC = () => {
               </p>
               {!isPhoneVerified && (
                 <Button 
-                  variant="outline" 
+                  variant="primary" 
                   size="sm" 
-                  className="mt-2" 
+                  className="mt-2 bg-primary text-white hover:bg-primary/90" 
                   onClick={handleVerifyPhone}
                   type="button"
                 >
