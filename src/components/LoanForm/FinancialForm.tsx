@@ -38,7 +38,6 @@ const FinancialForm: React.FC = () => {
       bankingPeriod: formData.bankingPeriod || 0,
       existingLoans: formData.existingLoans || false,
       existingLoanAmount: formData.existingLoanAmount || 0,
-      creditScore: formData.creditScore || 0,
       monthlyDebt: formData.monthlyDebt || 0,
       rentMortgage: formData.rentMortgage || 0,
       carPayment: formData.carPayment || 0,
@@ -60,7 +59,6 @@ const FinancialForm: React.FC = () => {
       if (currentUser.bankingPeriod) setValue('bankingPeriod', currentUser.bankingPeriod);
       
       // Prefill financial details
-      if (currentUser.creditScore) setValue('creditScore', currentUser.creditScore);
       if (currentUser.existingLoans !== undefined) setValue('existingLoans', currentUser.existingLoans);
       if (currentUser.existingLoanAmount) setValue('existingLoanAmount', currentUser.existingLoanAmount);
       if (currentUser.monthlyDebt) setValue('monthlyDebt', currentUser.monthlyDebt);
@@ -79,7 +77,6 @@ const FinancialForm: React.FC = () => {
       bankingPeriod: data.bankingPeriod,
       existingLoans: data.existingLoans,
       existingLoanAmount: data.existingLoanAmount,
-      creditScore: data.creditScore,
       monthlyDebt: data.monthlyDebt,
       rentMortgage: data.rentMortgage,
       carPayment: data.carPayment,

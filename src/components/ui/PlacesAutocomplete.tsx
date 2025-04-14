@@ -57,7 +57,18 @@ const PlacesAutocomplete: React.FC<PlacesAutocompleteProps> = ({
         break;
       case 'province':
         setProvince(value);
-        break;
+        // Immediately update for province changes to fix the issue with "next" not working
+        setTimeout(() => {
+          onAddressSelect({
+            street,
+            suburb,
+            city,
+            province: value, // Use the new value directly
+            postalCode,
+            fullAddress: `${street}, ${suburb}, ${city}, ${value}, ${postalCode}`.replace(/, ,/g, ",").replace(/^,|,$/g, "")
+          });
+        }, 0);
+        return; // Skip the general submitAddress call for province
       case 'postalCode':
         setPostalCode(value);
         break;
