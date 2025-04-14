@@ -127,8 +127,8 @@ const Contact: React.FC = () => {
                     <div>
                       <h3 className="font-semibold">Phone Number</h3>
                       <p className="text-foreground/70 mt-1">
-                        +27 11 234 5678<br />
-                        +27 71 234 5678 (Mobile)
+                        +27 72 243 1795 (Calls Only)<br />
+                        +27 64 043 8141 (WhatsApp Chat Only)
                       </p>
                     </div>
                   </div>
@@ -140,8 +140,7 @@ const Contact: React.FC = () => {
                     <div>
                       <h3 className="font-semibold">Email Address</h3>
                       <p className="text-foreground/70 mt-1">
-                        info@jbcapital.co.za<br />
-                        support@jbcapital.co.za
+                        info@jbcapitalco.com
                       </p>
                     </div>
                   </div>
@@ -153,9 +152,7 @@ const Contact: React.FC = () => {
                     <div>
                       <h3 className="font-semibold">Office Hours</h3>
                       <p className="text-foreground/70 mt-1">
-                        Monday - Friday: 8:00 AM - 5:00 PM<br />
-                        Saturday: 9:00 AM - 1:00 PM<br />
-                        Sunday: Closed
+                        Available 24/7
                       </p>
                     </div>
                   </div>
@@ -360,7 +357,7 @@ const Contact: React.FC = () => {
                 Prefer to speak with someone directly? Call our customer service line during business hours.
               </p>
               <Button variant="outline" className="group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                +27 11 234 5678 <ArrowRight className="ml-2 h-4 w-4" />
+                +27 72 243 1795 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -398,6 +395,43 @@ const Contact: React.FC = () => {
           <div className="absolute bottom-0 left-0 w-80 h-80 rounded-full bg-white/20 blur-3xl"></div>
         </div>
       </section>
+      
+      {/* Add a new section for regulatory information */}
+      <div className="glass-card p-6 rounded-xl animate-fade-in-delayed mt-6">
+        <h2 className="text-2xl font-bold mb-4 text-primary">Regulatory Information</h2>
+        <p className="text-foreground/70 mb-4">
+          JB Capital Co. is registered with the National Credit Regulator (NCR) under registration number NCR CP20712.
+        </p>
+        
+        <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-6 items-center mt-6">
+          <div className="text-center">
+            <img src="/logos/ncr.png" alt="National Credit Regulator" className="h-24 mx-auto" />
+          </div>
+          
+          <div className="text-center">
+            <img src="/logos/DebiCheck.png" alt="DebiCheck" className="h-24 mx-auto" />
+          </div>
+        </div>
+      </div>
+      
+      {/* Reference Site Section */}
+      <div className="glass-card p-6 rounded-xl animate-fade-in-delayed mt-6">
+        <h2 className="text-2xl font-bold mb-4 text-primary">Simplicity We Aim For</h2>
+        <p className="text-foreground/70 mb-4">
+          The Wonga site is the simplicity we aim for. It does not have to be similar but we like the compact site and easy interaction.
+        </p>
+        
+        <div className="mt-4">
+          <a 
+            href="https://www.wonga.co.za/loans?utm_source=google&utm_medium=cpc-brand&gclerc=aw.ds&gad_source=1&gbraid=0AAAADpIg76VzHNResAo1hs8wmsarApB&gclid=Cj0KCQjw2N2_BhCAAARIsAK4pEkUM2-6ftQxt1cOYEPlpX_Evm2I0D2F2OFcEPHWAgEQjDY_SiSPLUaAuvFEALw_wcB" 
+            className="text-primary hover:underline"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Visit Wonga.co.za
+          </a>
+        </div>
+      </div>
       
       <Footer />
     </div>

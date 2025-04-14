@@ -112,8 +112,7 @@ const Index: React.FC = () => {
         <section className="py-20 bg-secondary/30">
           <div className="container-custom">
             <div className="text-center mb-16">
-              <div className="chip mx-auto">Why Choose JB Capital</div>
-              <h2 className="heading-lg mt-4">A Simple Process from Start to Finish</h2>
+              <h2 className="heading-lg">A Simple Process from Start to Finish</h2>
               <p className="text-lg text-foreground/70 max-w-2xl mx-auto mt-4">
                 Our loan application process is designed to be intuitive, transparent, and efficient, getting you the funds you need without unnecessary complexity.
               </p>
@@ -154,15 +153,14 @@ const Index: React.FC = () => {
         </section>
         
         {/* How It Works Section - Improved */}
-        <section className="py-24 bg-gradient-to-br from-white via-primary/5 to-primary/10 relative overflow-hidden">
+        <section className="py-14 bg-gradient-to-br from-white via-primary/5 to-primary/10 relative overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
           <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-gradient-to-b from-primary/5 to-transparent rounded-bl-[200px] -z-10"></div>
           <div className="absolute bottom-0 left-0 w-1/4 h-1/3 bg-gradient-to-t from-primary/5 to-transparent rounded-tr-[150px] -z-10"></div>
           
           <div className="container-custom relative z-10">
             <div className="text-center mb-16">
-              <div className="chip mx-auto">Application Process</div>
-              <h2 className="heading-lg mt-4">How It Works</h2>
+              <h2 className="heading-lg">Our Simple Process</h2>
               <p className="text-lg text-foreground/70 max-w-2xl mx-auto mt-4">
                 Our loan application process is designed to be straightforward and efficient, with just a few simple steps.
               </p>
@@ -211,185 +209,110 @@ const Index: React.FC = () => {
                 </div>
               </div>
             </div>
-            
-            <div className="flex justify-center mt-8">
-              <Link 
-                to="/application" 
-                className="btn-primary group relative overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center">
-                  Start Your Application 
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-                </span>
-                <span className="absolute inset-0 bg-white/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-              </Link>
-            </div>
           </div>
         </section>
         
-        {/* Loan Types Section - NEW */}
-        <section className="py-24 relative bg-gradient-to-br from-blue-50 via-primary/5 to-blue-50 overflow-hidden">
+        {/* Loan Types Section */}
+        <section className="py-24 bg-white relative overflow-hidden">
           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-          <div className="absolute top-0 right-0 w-1/3 h-1/2 bg-gradient-to-b from-primary/5 to-transparent rounded-bl-[200px] -z-10"></div>
-          <div className="absolute bottom-0 left-0 w-1/4 h-1/3 bg-gradient-to-t from-primary/5 to-transparent rounded-tr-[150px] -z-10"></div>
-          
           <div className="container-custom relative z-10">
             <div className="text-center mb-16">
-              <div className="chip mx-auto">LOAN TYPES</div>
-              <h2 className="heading-lg mt-4">We Offer a Wide Variety of Loans</h2>
+              <h2 className="heading-lg">We Offer a Wide Variety of Loans</h2>
               <p className="text-lg text-foreground/70 max-w-2xl mx-auto mt-4">
-                Find the perfect financial solution tailored to your specific needs with our diverse loan offerings
+                Find the perfect financial solution tailored to your specific needs with our diverse
+                loan offerings
               </p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Personal Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <User size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Personal Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Achieve your goals with flexible personal loans designed to meet your unique financial requirements.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Personal Loan Card */}
+              <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-500 mb-4">
+                  <User className="h-6 w-6" />
                 </div>
+                <h3 className="text-xl font-semibold mb-2">Personal Loan</h3>
+                <p className="text-foreground/70 mb-4">
+                  Achieve your goals with flexible personal loans designed to meet your unique financial requirements.
+                </p>
+                <Link to="/application" className="text-blue-500 font-medium inline-flex items-center mt-auto">
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
-
-              {/* Business Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <Building2 size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Business Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Empower your business growth with customized loan solutions for working capital, equipment, or expansion needs.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+              
+              {/* Education Loan Card */}
+              <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-500 mb-4">
+                  <GraduationCap className="h-6 w-6" />
                 </div>
+                <h3 className="text-xl font-semibold mb-2">Education Loan</h3>
+                <p className="text-foreground/70 mb-4">
+                  Invest in your future with education loans that support tuition, textbooks, and other academic expenses.
+                </p>
+                <Link to="/application" className="text-blue-500 font-medium inline-flex items-center mt-auto">
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
-
-              {/* Home Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <Home size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Home Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Secure your dream home with competitive mortgage rates and flexible repayment terms tailored to your financial situation.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+              
+              {/* Travel Loan Card */}
+              <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-500 mb-4">
+                  <Plane className="h-6 w-6" />
                 </div>
+                <h3 className="text-xl font-semibold mb-2">Travel Loan</h3>
+                <p className="text-foreground/70 mb-4">
+                  Turn your dream getaway into reality with affordable travel loans for flights, accommodations, and experiences.
+                </p>
+                <Link to="/application" className="text-blue-500 font-medium inline-flex items-center mt-auto">
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
-
-              {/* Education Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <GraduationCap size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Education Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Invest in your future with education loans that support tuition, textbooks, and other academic expenses.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+              
+              {/* Wedding Loan Card */}
+              <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-500 mb-4">
+                  <Heart className="h-6 w-6" />
                 </div>
+                <h3 className="text-xl font-semibold mb-2">Wedding Loan</h3>
+                <p className="text-foreground/70 mb-4">
+                  Celebrate your dream wedding without financial stress, with tailored loans designed to cover all your special day expenses.
+                </p>
+                <Link to="/application" className="text-blue-500 font-medium inline-flex items-center mt-auto">
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
-
-              {/* Travel Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <Plane size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Travel Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Turn your dream getaway into reality with affordable travel loans for flights, accommodations, and experiences.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+              
+              {/* Payday Loan Card */}
+              <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-500 mb-4">
+                  <Banknote className="h-6 w-6" />
                 </div>
+                <h3 className="text-xl font-semibold mb-2">Payday Loan</h3>
+                <p className="text-foreground/70 mb-4">
+                  Bridge the gap until your next paycheck with quick and convenient payday loans for urgent financial needs.
+                </p>
+                <Link to="/application" className="text-blue-500 font-medium inline-flex items-center mt-auto">
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
-
-              {/* Wedding Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <Heart size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Wedding Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Celebrate your dream wedding without financial stress, with tailored loans designed to cover all your special day expenses.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Payday Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <Banknote size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Payday Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Bridge the gap until your next paycheck with quick and convenient payday loans for urgent financial needs.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-
+              
               {/* Medical Emergency Loan */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="glass-card p-6 hover:shadow-xl transition-all duration-300 group-hover:translate-y-[-8px] h-full flex flex-col">
-                  <div className="mb-4 p-3 bg-primary/10 text-primary rounded-full w-14 h-14 flex items-center justify-center">
-                    <Stethoscope size={28} />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-primary">Medical Emergency Loan</h3>
-                  <p className="text-foreground/70 text-sm mb-4 flex-grow">
-                    Access funds quickly to cover unexpected medical expenses, ensuring peace of mind during emergencies.
-                  </p>
-                  <Link to="/application" className="text-primary flex items-center text-sm font-medium mt-auto">
-                    Learn more <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
+              <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
+                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-blue-100 text-blue-500 mb-4">
+                  <Stethoscope className="h-6 w-6" />
                 </div>
+                <h3 className="text-xl font-semibold mb-2">Medical Emergency Loan</h3>
+                <p className="text-foreground/70 mb-4">
+                  Access funds quickly to cover unexpected medical expenses, ensuring peace of mind during emergencies.
+                </p>
+                <Link to="/application" className="text-blue-500 font-medium inline-flex items-center mt-auto">
+                  Learn more <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
               </div>
             </div>
-
-            <div className="flex justify-center mt-12">
-              <Link 
-                to="/application" 
-                className="btn-primary group relative overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center">
-                  Find Your Perfect Loan 
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-                </span>
-                <span className="absolute inset-0 bg-white/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
+            
+            <div className="mt-12 text-center">
+              <Link to="/application" className="px-8 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-all duration-300 inline-flex items-center">
+                Find Your Perfect Loan <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -408,20 +331,20 @@ const Index: React.FC = () => {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.1),transparent_40%)]"></div>
           
           <div className="container-custom relative z-10">
-            <div className="flex flex-col lg:flex-row items-center gap-12">
-              <div className="lg:w-3/5 space-y-6 text-white animate-fade-in">
+            <div className="flex flex-col items-center gap-12">
+              <div className="space-y-6 text-white animate-fade-in text-center max-w-3xl mx-auto">
                 <h2 className="text-4xl md:text-5xl font-bold leading-tight">
                   Start Your Journey to <span className="relative">
                     Financial Freedom
                     <span className="absolute bottom-1 left-0 w-full h-1 bg-white/30 rounded-full"></span>
                   </span>
                 </h2>
-                <p className="text-xl text-white/90 max-w-2xl">
+                <p className="text-xl text-white/90">
                   Join thousands of satisfied customers who have achieved their financial goals with JB Capital. 
                   Our tailored loan solutions can help you take the next step in your financial journey.
                 </p>
                 
-                <div className="flex flex-wrap gap-4 pt-4">
+                <div className="flex flex-wrap gap-4 pt-4 justify-center">
                   <Link to="/application" className="px-8 py-4 bg-white text-primary rounded-lg font-semibold shadow-lg hover:shadow-white/20 transition-all duration-300 transform hover:-translate-y-1 flex items-center">
                     <span>Apply Now</span>
                     <ArrowRight className="ml-2 h-5 w-5" />
@@ -431,7 +354,7 @@ const Index: React.FC = () => {
                   </Link>
                 </div>
                 
-                <div className="pt-8 flex items-center">
+                <div className="pt-8 flex items-center justify-center">
                   <div className="flex -space-x-4">
                     {[1, 2, 3, 4].map((i) => (
                       <div key={i} className="w-12 h-12 rounded-full border-2 border-white overflow-hidden">
@@ -453,36 +376,6 @@ const Index: React.FC = () => {
                     <div className="font-bold text-xl">4.9/5</div>
                     <div className="text-white/80 text-sm">Customer Rating</div>
                   </div>
-                </div>
-              </div>
-              
-              <div className="lg:w-2/5 glass-card p-6 bg-white/10 backdrop-blur-md rounded-xl border border-white/20 text-white">
-                <h3 className="text-2xl font-semibold mb-4">Quick Loan Calculator</h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Loan Amount</label>
-                    <div className="bg-white/20 rounded-lg p-3 flex items-center">
-                      <span className="text-white/60 mr-2">R</span>
-                      <span className="text-lg font-medium">5,000 - 50,000</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Loan Term</label>
-                    <div className="bg-white/20 rounded-lg p-3 flex items-center">
-                      <span className="text-lg font-medium">1 - 4 months</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Monthly Payment</label>
-                    <div className="bg-primary/30 rounded-lg p-4 flex items-center">
-                      <span className="text-white/60 mr-2">From</span>
-                      <span className="text-2xl font-bold">R1,350</span>
-                      <span className="text-white/60 ml-2">/month</span>
-                    </div>
-                  </div>
-                  <Link to="/application" className="block w-full py-3 bg-white text-primary rounded-lg font-medium text-center hover:bg-white/90 transition-all duration-300 mt-4">
-                    Get Started
-                  </Link>
                 </div>
               </div>
             </div>
