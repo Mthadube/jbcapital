@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAppData } from '@/utils/AppDataContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -20,21 +20,6 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, users, getUserByEmail, setCurrentUser, currentUser } = useAppData();
-  
-  // Check if admin login was required (redirected from admin page)
-  const adminRequired = location.state?.adminRequired;
-  
-  // Initialize admin email if redirected from admin page
-  useEffect(() => {
-    if (adminRequired) {
-      setEmail('admin@jbcapital.com');
-      // Set focus on password field if possible
-      setTimeout(() => {
-        const passwordField = document.getElementById('password');
-        if (passwordField) passwordField.focus();
-      }, 100);
-    }
-  }, [adminRequired]);
   
   // Check for existing session on component mount
   useEffect(() => {
@@ -70,11 +55,6 @@ const Login = () => {
   // Get the redirect URL from location state or default to profile page
   const from = location.state?.from?.pathname || '/profile';
   
-  // Check if input email is admin
-  const isAdminEmail = () => {
-    return email.toLowerCase() === 'admin@jbcapital.com';
-  };
-  
   // Handle the submit function for better error handling
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,11 +75,6 @@ const Login = () => {
             navigate(from, { replace: true });
           }
         }, 500);
-      } else {
-        // Login function will display appropriate error messages
-        if (email.toLowerCase() === 'admin@jbcapital.com') {
-          toast.error('Admin login failed. Please check your credentials.');
-        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -119,19 +94,11 @@ const Login = () => {
         <div className="max-w-md mx-auto">
           <Card className="glass-card">
             <CardHeader className="space-y-1">
-              {adminRequired && (
-                <div className="bg-amber-100 dark:bg-amber-950 p-3 rounded-md mb-4 text-amber-800 dark:text-amber-300 text-sm">
-                  <p className="font-medium">Admin login required</p>
-                  <p className="text-xs mt-1">Please use admin credentials to access the dashboard</p>
-                </div>
-              )}
               <CardTitle className="text-2xl font-bold text-center">
-                {isAdminEmail() ? "Admin Login" : "Log in to JB Capital"}
+                Log in to JB Capital
               </CardTitle>
               <CardDescription className="text-center">
-                {isAdminEmail() ? 
-                  "Enter admin credentials to access the dashboard" : 
-                  "Enter your email to access your account"}
+                Enter your email to access your account
               </CardDescription>
             </CardHeader>
             
@@ -166,7 +133,7 @@ const Login = () => {
                       className="pl-10 pr-10"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      required={isAdminEmail()}
+                      required
                     />
                     <Button
                       type="button"
@@ -184,9 +151,8 @@ const Login = () => {
                   type="submit" 
                   className="w-full" 
                   disabled={isLoading}
-                  variant={isAdminEmail() ? "default" : "secondary"}
                 >
-                  {isLoading ? 'Signing in...' : isAdminEmail() ? 'Sign in as Admin' : 'Sign in'}
+                  {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>
               </form>
               
@@ -199,11 +165,21 @@ const Login = () => {
                     <Button 
                       variant="link" 
                       className="p-0 h-auto"
-                      onClick={() => navigate('/sign-up')}
+                      onClick={() => navigate('/application')}
                     >
-                      Register
+                      Apply for a Loan
                     </Button>
                   </p>
+                </div>
+                
+                <div className="text-center">
+                  <Button 
+                    variant="link" 
+                    className="text-xs text-muted-foreground"
+                    onClick={() => navigate('/admin/login')}
+                  >
+                    Admin Login
+                  </Button>
                 </div>
               </div>
             </CardContent>
