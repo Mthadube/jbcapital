@@ -6,6 +6,7 @@ export interface FormData {
   lastName: string;
   idNumber: string;
   phone: string;
+  alternativePhone: string;
   email: string;
   password?: string;
   confirmPassword?: string;
@@ -29,6 +30,12 @@ export interface FormData {
   paymentDate?: string;
   employmentType?: "full-time" | "part-time" | "contract" | "temporary" | "other";
   employmentSector?: string;
+  workAddress?: string;
+  workCity?: string;
+  workCountry?: string;
+  workPostalCode?: string;
+  workEmail?: string;
+  workPhoneNumber?: string;
   
   // Financial Information
   creditScore: number;
@@ -45,7 +52,10 @@ export interface FormData {
   totalMonthlyExpenses?: number;
   bankName?: string;
   accountType?: string;
+  accountNumber?: string;
   bankingPeriod?: number;
+  additionalFinancialInfo?: string;
+  debtToIncomeRatio?: number;
   
   // Loan Details
   loanAmount: number;
@@ -88,6 +98,7 @@ const defaultFormData: FormData = {
   lastName: '',
   idNumber: '',
   phone: '',
+  alternativePhone: '',
   email: '',
   password: '',
   confirmPassword: '',
@@ -101,6 +112,13 @@ const defaultFormData: FormData = {
   jobTitle: '',
   yearsEmployed: 0,
   monthlyIncome: 0,
+  workAddress: '',
+  workCity: '',
+  workCountry: 'South Africa',
+  workPostalCode: '',
+  workEmail: '',
+  workPhoneNumber: '',
+  paymentDate: '',
   creditScore: 0,
   existingLoans: false,
   existingLoanAmount: 0,
@@ -114,7 +132,9 @@ const defaultFormData: FormData = {
   savings: 0,
   bankName: '',
   accountType: 'cheque',
+  accountNumber: '',
   bankingPeriod: 0,
+  additionalFinancialInfo: '',
   loanAmount: 0,
   loanPurpose: "personal",
   loanTerm: 0,

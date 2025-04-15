@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { saveLoanCalculatorData } from '@/utils/loanDataStorage';
+import { toast } from "sonner";
 
 interface LoanCalculatorProps {
   className?: string;
@@ -64,7 +65,7 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
   
   const handleApplyNow = () => {
     // Save loan calculator data before navigating to application
-    saveLoanCalculatorData({
+    const calculatorData = {
       loanAmount,
       loanDuration,
       interestRate,
@@ -74,7 +75,14 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ className }) => {
       initiationFee,
       monthlyServiceFee,
       monthlyInsurance: 0 // Set to 0 as we no longer use insurance in the calculation
-    });
+    };
+    
+    // Save to localStorage for the application to access
+    saveLoanCalculatorData(calculatorData);
+    console.log('Loan calculator data saved:', calculatorData);
+    
+    // Visual confirmation
+    toast.success("Your loan amount has been saved and will be pre-filled in your application");
   };
   
   return (

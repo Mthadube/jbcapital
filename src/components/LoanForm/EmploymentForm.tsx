@@ -30,6 +30,13 @@ const EmploymentForm: React.FC = () => {
       monthlyIncome: formData.monthlyIncome || 0,
       employmentType: formData.employmentType || "full-time",
       employmentSector: formData.employmentSector || "",
+      workAddress: (formData as any).workAddress || "",
+      workCity: (formData as any).workCity || "",
+      workCountry: (formData as any).workCountry || "South Africa",
+      workPostalCode: (formData as any).workPostalCode || "",
+      workEmail: (formData as any).workEmail || "",
+      workPhoneNumber: (formData as any).workPhoneNumber || "",
+      paymentDate: formData.paymentDate || "25",
     }
   });
   
@@ -43,6 +50,13 @@ const EmploymentForm: React.FC = () => {
       if (currentUser.jobTitle) setValue('jobTitle', currentUser.jobTitle);
       if (currentUser.yearsEmployed) setValue('yearsEmployed', currentUser.yearsEmployed);
       if (currentUser.monthlyIncome) setValue('monthlyIncome', currentUser.monthlyIncome);
+      if ((currentUser as any).workAddress) setValue('workAddress', (currentUser as any).workAddress);
+      if ((currentUser as any).workCity) setValue('workCity', (currentUser as any).workCity);
+      if ((currentUser as any).workCountry) setValue('workCountry', (currentUser as any).workCountry);
+      if ((currentUser as any).workPostalCode) setValue('workPostalCode', (currentUser as any).workPostalCode);
+      if ((currentUser as any).workEmail) setValue('workEmail', (currentUser as any).workEmail);
+      if ((currentUser as any).workPhoneNumber) setValue('workPhoneNumber', (currentUser as any).workPhoneNumber);
+      if (currentUser.paymentDate) setValue('paymentDate', currentUser.paymentDate);
     }
   }, [currentUser, setValue]);
   
@@ -55,6 +69,16 @@ const EmploymentForm: React.FC = () => {
       monthlyIncome: data.monthlyIncome,
       employmentType: data.employmentType,
       employmentSector: data.employmentSector,
+      // Use the type casting to work around TypeScript errors until interface updates
+      ...{
+        workAddress: data.workAddress,
+        workCity: data.workCity, 
+        workCountry: data.workCountry,
+        workPostalCode: data.workPostalCode,
+        workEmail: data.workEmail,
+        workPhoneNumber: data.workPhoneNumber,
+        paymentDate: data.paymentDate
+      }
     });
     
     toast.success("Employment information saved!");
@@ -207,6 +231,140 @@ const EmploymentForm: React.FC = () => {
                   />
                   {errors.yearsEmployed && (
                     <p className="text-sm text-destructive mt-1">{errors.yearsEmployed.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workAddress" className="label">Work Address</Label>
+                  <Controller
+                    name="workAddress"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        id="workAddress"
+                        className={`form-input ${errors.workAddress ? 'border-destructive' : ''}`}
+                        placeholder="Work street address"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.workAddress && (
+                    <p className="text-sm text-destructive mt-1">{errors.workAddress.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workCity" className="label">City</Label>
+                  <Controller
+                    name="workCity"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        id="workCity"
+                        className={`form-input ${errors.workCity ? 'border-destructive' : ''}`}
+                        placeholder="Work city"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.workCity && (
+                    <p className="text-sm text-destructive mt-1">{errors.workCity.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workCountry" className="label">Country</Label>
+                  <Controller
+                    name="workCountry"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        id="workCountry"
+                        className={`form-input ${errors.workCountry ? 'border-destructive' : ''}`}
+                        placeholder="Work country"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.workCountry && (
+                    <p className="text-sm text-destructive mt-1">{errors.workCountry.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workPostalCode" className="label">Postal Code</Label>
+                  <Controller
+                    name="workPostalCode"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        id="workPostalCode"
+                        className={`form-input ${errors.workPostalCode ? 'border-destructive' : ''}`}
+                        placeholder="Work postal code"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.workPostalCode && (
+                    <p className="text-sm text-destructive mt-1">{errors.workPostalCode.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workEmail" className="label">Work Email</Label>
+                  <Controller
+                    name="workEmail"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        id="workEmail"
+                        type="email"
+                        className={`form-input ${errors.workEmail ? 'border-destructive' : ''}`}
+                        placeholder="Work email address"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.workEmail && (
+                    <p className="text-sm text-destructive mt-1">{errors.workEmail.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="workPhoneNumber" className="label">Work Contact Number</Label>
+                  <Controller
+                    name="workPhoneNumber"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        id="workPhoneNumber"
+                        className={`form-input ${errors.workPhoneNumber ? 'border-destructive' : ''}`}
+                        placeholder="Work phone number"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.workPhoneNumber && (
+                    <p className="text-sm text-destructive mt-1">{errors.workPhoneNumber.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="paymentDate" className="label">Monthly Salary Date</Label>
+                  <Controller
+                    name="paymentDate"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        id="paymentDate"
+                        className={`form-input ${errors.paymentDate ? 'border-destructive' : ''}`}
+                        placeholder="Day of month you receive your salary"
+                        {...field}
+                      />
+                    )}
+                  />
+                  {errors.paymentDate && (
+                    <p className="text-sm text-destructive mt-1">{errors.paymentDate.message}</p>
                   )}
                 </div>
               </div>

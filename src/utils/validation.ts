@@ -135,11 +135,12 @@ const personalInfoBaseSchema = z.object({
     }
   ),
   phoneNumber: z.string().regex(/^0\d{9}$/, "Please enter a valid 10-digit phone number starting with 0"),
+  alternativePhoneNumber: z.string().regex(/^0\d{9}$/, "Please enter a valid 10-digit phone number starting with 0"),
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  suburb: z.string().optional(),
+  suburb: z.string().min(2, "Suburb must be at least 2 characters"),
   city: z.string().min(2, "City must be at least 2 characters"),
   province: z.string().min(2, "Please select a province"),
   postalCode: z.string().regex(/^\d{4}$/, "Please enter a valid 4-digit postal code"),
@@ -158,15 +159,21 @@ export const employmentInfoSchema = z.object({
   employmentStatus: z.enum(["employed", "self-employed", "unemployed", "retired"], {
     errorMap: () => ({ message: "Please select an employment status" }),
   }),
-  employerName: z.string().min(2, "Employer name must be at least 2 characters").optional().or(z.literal("")),
-  jobTitle: z.string().min(2, "Job title must be at least 2 characters").optional().or(z.literal("")),
-  yearsEmployed: z.number().min(0, "Years employed cannot be negative").optional(),
+  employerName: z.string().min(2, "Employer name must be at least 2 characters"),
+  jobTitle: z.string().min(2, "Job title must be at least 2 characters"),
+  yearsEmployed: z.number().min(0, "Years employed cannot be negative"),
   monthlyIncome: z.number().min(0, "Monthly income cannot be negative"),
-  paymentDate: z.string().optional(),
+  paymentDate: z.string(),
   employmentType: z.enum(["full-time", "part-time", "contract", "temporary", "other"], {
     errorMap: () => ({ message: "Please select an employment type" }),
-  }).optional(),
-  employmentSector: z.string().optional(),
+  }),
+  employmentSector: z.string().min(2, "Employment sector must be at least 2 characters"),
+  workAddress: z.string().min(5, "Work address must be at least 5 characters"),
+  workCity: z.string().min(2, "City must be at least 2 characters"),
+  workCountry: z.string().min(2, "Country must be at least 2 characters"),
+  workPostalCode: z.string().regex(/^\d{4}$/, "Please enter a valid 4-digit postal code"),
+  workEmail: z.string().email("Please enter a valid email address"),
+  workPhoneNumber: z.string().regex(/^0\d{9}$/, "Please enter a valid 10-digit phone number starting with 0"),
 });
 
 // Financial Information Schema
@@ -174,6 +181,7 @@ export const financialInfoSchema = z.object({
   creditScore: z.number().optional(),
   existingLoans: z.boolean(),
   existingLoanAmount: z.number().min(0, "Loan amount cannot be negative"),
+  monthlyIncome: z.number().min(0, "Monthly income cannot be negative"),
   monthlyDebt: z.number().min(0, "Monthly debt cannot be negative"),
   // Additional fields
   rentMortgage: z.number().min(0, "Amount cannot be negative"),
@@ -183,10 +191,11 @@ export const financialInfoSchema = z.object({
   insurance: z.number().min(0, "Amount cannot be negative"),
   otherExpenses: z.number().min(0, "Amount cannot be negative"),
   savings: z.number().min(0, "Amount cannot be negative"),
-  bankName: z.string().optional(),
-  accountType: z.string().optional(),
-  accountNumber: z.string().optional(),
-  bankingPeriod: z.number().min(0, "Banking period cannot be negative").optional(),
+  additionalFinancialInfo: z.string().min(2, "Please provide additional financial information"),
+  bankName: z.string().min(2, "Bank name must be at least 2 characters"),
+  accountType: z.string().min(2, "Please select an account type"),
+  accountNumber: z.string().min(5, "Account number must be at least 5 characters"),
+  bankingPeriod: z.number().min(0, "Banking period cannot be negative"),
 });
 
 // Loan Details Schema

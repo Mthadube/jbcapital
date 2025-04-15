@@ -56,6 +56,7 @@ const ReviewSubmitForm: React.FC = () => {
       lastName: formData.lastName,
       email: formData.email,
       phone: formData.phone,
+      alternativePhone: formData.alternativePhone || '',
       idNumber: formData.idNumber || '',
       dateOfBirth: '',
       gender: '',
@@ -75,9 +76,15 @@ const ReviewSubmitForm: React.FC = () => {
       yearsEmployed: formData.yearsEmployed,
       monthlyIncome: formData.monthlyIncome,
       paymentDate: formData.paymentDate,
+      workAddress: formData.workAddress || '',
+      workCity: formData.workCity || '',
+      workCountry: formData.workCountry || 'South Africa',
+      workPostalCode: formData.workPostalCode || '',
+      workEmail: formData.workEmail || '',
+      workPhoneNumber: formData.workPhoneNumber || '',
       bankName: formData.bankName,
       accountType: formData.accountType,
-      accountNumber: '',
+      accountNumber: formData.accountNumber || '',
       bankingPeriod: formData.bankingPeriod,
       existingLoans: formData.existingLoans,
       existingLoanAmount: formData.existingLoanAmount || 0,
@@ -88,12 +95,14 @@ const ReviewSubmitForm: React.FC = () => {
       utilities: formData.utilities || 0,
       insurance: formData.insurance || 0,
       otherExpenses: formData.otherExpenses || 0,
+      additionalFinancialInfo: formData.additionalFinancialInfo || '',
       totalMonthlyExpenses: (formData.rentMortgage || 0) + 
         (formData.carPayment || 0) + 
         (formData.groceries || 0) + 
         (formData.utilities || 0) + 
         (formData.insurance || 0) + 
         (formData.otherExpenses || 0),
+      debtToIncomeRatio: ((formData.monthlyDebt || 0) / (formData.monthlyIncome || 1)) * 100,
       accountStatus: 'active',
       registrationDate: new Date().toISOString().split('T')[0],
       lastLogin: new Date().toISOString().split('T')[0],
@@ -309,6 +318,10 @@ const ReviewSubmitForm: React.FC = () => {
                     <p className="text-sm text-foreground/60">Phone Number</p>
                   <p className="font-medium">{formData.phone}</p>
                 </div>
+                <div>
+                  <p className="text-sm text-foreground/60">Alternative Phone</p>
+                  <p className="font-medium">{formData.alternativePhone || "-"}</p>
+                </div>
                 <div className="md:col-span-2">
                   <p className="text-sm text-foreground/60">Address</p>
                   <p className="font-medium">
@@ -347,6 +360,22 @@ const ReviewSubmitForm: React.FC = () => {
                     <p className="text-sm text-foreground/60">Employment Duration</p>
                   <p className="font-medium">{formData.yearsEmployed} years</p>
                 </div>
+                <div>
+                  <p className="text-sm text-foreground/60">Work Email</p>
+                  <p className="font-medium">{formData.workEmail || "-"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-foreground/60">Work Phone</p>
+                  <p className="font-medium">{formData.workPhoneNumber || "-"}</p>
+                </div>
+                <div className="md:col-span-2">
+                  <p className="text-sm text-foreground/60">Work Address</p>
+                  <p className="font-medium">
+                    {formData.workAddress ? 
+                      `${formData.workAddress}, ${formData.workCity || ''}, ${formData.workPostalCode || ''}, ${formData.workCountry || 'South Africa'}` 
+                      : "-"}
+                  </p>
+                </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -364,6 +393,10 @@ const ReviewSubmitForm: React.FC = () => {
                     <p className="font-medium capitalize">{formData.accountType}</p>
           </div>
           <div>
+                    <p className="text-sm text-foreground/60">Account Number</p>
+                    <p className="font-medium">{formData.accountNumber || "-"}</p>
+                </div>
+                <div>
                     <p className="text-sm text-foreground/60">Banking Period</p>
                     <p className="font-medium">{formData.bankingPeriod} years</p>
                 </div>
@@ -390,6 +423,12 @@ const ReviewSubmitForm: React.FC = () => {
                   <div>
                     <p className="text-sm text-foreground/60">Existing Loan Amount</p>
                       <p className="font-medium">R {formData.existingLoanAmount?.toLocaleString()}</p>
+                  </div>
+                )}
+                {formData.additionalFinancialInfo && (
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-foreground/60">Additional Financial Information</p>
+                    <p className="font-medium">{formData.additionalFinancialInfo}</p>
                   </div>
                 )}
               </div>

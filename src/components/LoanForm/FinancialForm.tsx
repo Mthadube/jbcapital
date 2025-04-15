@@ -34,10 +34,11 @@ const FinancialForm: React.FC = () => {
     defaultValues: {
       bankName: formData.bankName || "",
       accountType: formData.accountType || "cheque",
-      accountNumber: "",
+      accountNumber: (formData as any).accountNumber || "",
       bankingPeriod: formData.bankingPeriod || 0,
       existingLoans: formData.existingLoans || false,
       existingLoanAmount: formData.existingLoanAmount || 0,
+      monthlyIncome: formData.monthlyIncome || 0,
       monthlyDebt: formData.monthlyDebt || 0,
       rentMortgage: formData.rentMortgage || 0,
       carPayment: formData.carPayment || 0,
@@ -46,6 +47,7 @@ const FinancialForm: React.FC = () => {
       insurance: formData.insurance || 0,
       otherExpenses: formData.otherExpenses || 0,
       savings: formData.savings || 0,
+      additionalFinancialInfo: (formData as any).additionalFinancialInfo || "",
     }
   });
   
@@ -59,6 +61,7 @@ const FinancialForm: React.FC = () => {
       if (currentUser.bankingPeriod) setValue('bankingPeriod', currentUser.bankingPeriod);
       
       // Prefill financial details
+      if (currentUser.monthlyIncome) setValue('monthlyIncome', currentUser.monthlyIncome);
       if (currentUser.existingLoans !== undefined) setValue('existingLoans', currentUser.existingLoans);
       if (currentUser.existingLoanAmount) setValue('existingLoanAmount', currentUser.existingLoanAmount);
       if (currentUser.monthlyDebt) setValue('monthlyDebt', currentUser.monthlyDebt);
@@ -67,6 +70,8 @@ const FinancialForm: React.FC = () => {
       if (currentUser.utilities) setValue('utilities', currentUser.utilities);
       if (currentUser.insurance) setValue('insurance', currentUser.insurance);
       if (currentUser.otherExpenses) setValue('otherExpenses', currentUser.otherExpenses);
+      if ((currentUser as any).additionalFinancialInfo) 
+        setValue('additionalFinancialInfo', (currentUser as any).additionalFinancialInfo);
     }
   }, [currentUser, setValue]);
   
@@ -74,9 +79,16 @@ const FinancialForm: React.FC = () => {
     updateFormData({
       bankName: data.bankName,
       accountType: data.accountType,
+      // Use object spreading with type assertions to fix TypeScript errors
+      ...{
+        accountNumber: data.accountNumber,
+        additionalFinancialInfo: data.additionalFinancialInfo,
+        debtToIncomeRatio: calculateDebtToIncomeRatio(data)
+      },
       bankingPeriod: data.bankingPeriod,
       existingLoans: data.existingLoans,
       existingLoanAmount: data.existingLoanAmount,
+      monthlyIncome: data.monthlyIncome,
       monthlyDebt: data.monthlyDebt,
       rentMortgage: data.rentMortgage,
       carPayment: data.carPayment,
@@ -102,6 +114,12 @@ const FinancialForm: React.FC = () => {
     total += Number(data.insurance) || 0;
     total += Number(data.otherExpenses) || 0;
     return total;
+  };
+  
+  const calculateDebtToIncomeRatio = (data: FinancialInfoFormData) => {
+    const totalExpenses = calculateTotalExpenses(data);
+    if (!data.monthlyIncome || data.monthlyIncome === 0) return 0;
+    return (totalExpenses / data.monthlyIncome) * 100;
   };
   
   // Watch for existing loans checkbox to conditionally show loan amount
@@ -224,12 +242,34 @@ const FinancialForm: React.FC = () => {
             )}
           </div>
         </div>
-              </div>
+      </div>
       
       <div className="glass-card p-6">
-        <h2 className="heading-md mb-6">Financial Overview</h2>
+        <h2 className="heading-md mb-6">Affordability Assessment</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Label htmlFor="monthlyIncome" className="label">Monthly Income (R)</Label>
+            <Controller
+              name="monthlyIncome"
+              control={control}
+              render={({ field }) => (
+                <Input 
+                  id="monthlyIncome"
+                  type="number"
+                  min="0"
+                  className={`form-input ${errors.monthlyIncome ? 'border-destructive' : ''}`}
+                  placeholder="Your monthly income"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                />
+              )}
+            />
+            {errors.monthlyIncome && (
+              <p className="text-sm text-destructive mt-1">{errors.monthlyIncome.message}</p>
+            )}
+          </div>
+          
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Controller
@@ -459,6 +499,29 @@ const FinancialForm: React.FC = () => {
               <p className="text-sm text-destructive mt-1">{errors.savings.message}</p>
             )}
           </div>
+        </div>
+      </div>
+      
+      <div className="glass-card p-6">
+        <h2 className="heading-md mb-6">Additional Financial Information</h2>
+        
+        <div>
+          <Label htmlFor="additionalFinancialInfo" className="label">Additional Relevant Financial Information</Label>
+          <Controller
+            name="additionalFinancialInfo"
+            control={control}
+            render={({ field }) => (
+              <textarea 
+                id="additionalFinancialInfo"
+                className={`form-textarea w-full h-24 ${errors.additionalFinancialInfo ? 'border-destructive' : ''}`}
+                placeholder="Any other relevant financial information"
+                {...field}
+              />
+            )}
+          />
+          {errors.additionalFinancialInfo && (
+            <p className="text-sm text-destructive mt-1">{errors.additionalFinancialInfo.message}</p>
+          )}
         </div>
       </div>
       

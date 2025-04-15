@@ -25,9 +25,16 @@ const requiredDocuments = [
     accepted: ".pdf,.jpg,.jpeg,.png"
   },
   { 
+    id: 'selfieWithID', 
+    name: 'Selfie with ID', 
+    description: 'Selfie holding the ID document (new requirement)',
+    required: true,
+    accepted: ".jpg,.jpeg,.png"
+  },
+  { 
     id: 'proofOfIncome', 
     name: 'Proof of Income', 
-    description: 'Latest 3 months payslips, or employment letter',
+    description: 'Latest 3 months\' payslips (employment letters not accepted)',
     required: true,
     accepted: ".pdf,.jpg,.jpeg,.png,.doc,.docx"
   },
@@ -47,7 +54,7 @@ const requiredDocuments = [
   },
   { 
     id: 'employmentVerification', 
-    name: 'Employment Verification', 
+    name: 'Employment Verification Document', 
     description: 'Letter from employer confirming employment details',
     required: false,
     accepted: ".pdf,.jpg,.jpeg,.png,.doc,.docx"
@@ -58,6 +65,7 @@ const DocumentUploadForm: React.FC = () => {
   const { updateFormData, prevStep, nextStep } = useFormContext();
   const [files, setFiles] = useState<Record<string, UploadFile[]>>({
     id: [],
+    selfieWithID: [],
     proofOfIncome: [],
     bankStatements: [],
     proofOfAddress: [],

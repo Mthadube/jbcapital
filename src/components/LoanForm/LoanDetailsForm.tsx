@@ -154,28 +154,39 @@ const LoanDetailsForm: React.FC = () => {
         
         <div className="space-y-6">
           <div>
-            <Label htmlFor="loanAmount" className="label">Loan Amount (R)</Label>
+            <Label htmlFor="loanAmount" className="label text-lg font-semibold text-primary">Loan Amount (R)</Label>
             <div className="space-y-2">
               <Controller
                 name="loanAmount"
                 control={control}
                 render={({ field: { value, onChange, ...rest } }) => (
-                  <Input 
-                    id="loanAmount"
-                    type="number"
-                    className={`form-input ${errors.loanAmount ? 'border-destructive' : ''}`}
-                    placeholder="10000"
-                    value={value || ''}
-                    onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)}
-                    min={1000}
-                    max={1000000}
-                    step={1000}
-                    {...rest}
-                  />
+                  <div className="relative">
+                    <Input 
+                      id="loanAmount"
+                      type="number"
+                      className={`form-input text-xl font-bold h-14 pl-8 pr-4 border-2 border-primary/50 focus:border-primary shadow-sm shadow-primary/20 ${errors.loanAmount ? 'border-destructive' : ''}`}
+                      placeholder="10000"
+                      value={value || ''}
+                      onChange={(e) => onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      min={1000}
+                      max={1000000}
+                      step={1000}
+                      {...rest}
+                    />
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary font-bold">R</span>
+                  </div>
                 )}
               />
               {errors.loanAmount && (
                 <p className="text-sm text-destructive mt-1">{errors.loanAmount.message}</p>
+              )}
+              {getLoanCalculatorData() && (
+                <p className="text-sm text-primary italic mt-1 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Amount transferred from home page calculator
+                </p>
               )}
             </div>
           </div>

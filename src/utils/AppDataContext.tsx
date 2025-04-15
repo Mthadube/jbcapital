@@ -36,6 +36,7 @@ export interface User {
   lastName: string;
   email: string;
   phone: string;
+  alternativePhone?: string;
   idNumber: string;
   dateOfBirth?: string;
   gender?: string;
@@ -55,6 +56,12 @@ export interface User {
   yearsEmployed?: number;
   monthlyIncome: number;
   paymentDate?: string;
+  workAddress?: string;
+  workCity?: string;
+  workCountry?: string;
+  workPostalCode?: string;
+  workEmail?: string;
+  workPhoneNumber?: string;
   bankName?: string;
   accountType?: string;
   accountNumber?: string;
@@ -69,6 +76,7 @@ export interface User {
   utilities?: number;
   insurance?: number;
   otherExpenses?: number;
+  additionalFinancialInfo?: string;
   totalMonthlyExpenses?: number;
   accountStatus: string;
   registrationDate: string;
@@ -637,13 +645,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         
         setApplications(updatedApplications);
         
-        toast({
-          title: "Application updated",
-          description: "Application has been successfully updated",
-          status: "success",
-          duration: 5000,
-          isClosable: true,
-        });
+        toast.success("Application has been successfully updated");
         
         return true;
       } else {
@@ -651,13 +653,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Error updating application:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update application",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      toast.error("Failed to update application");
       return false;
     }
   };
@@ -1069,7 +1065,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
       
       // Create a document for the contract
       const contractDocument: Document = {
-        id: generateId(),
+        id: generateId("doc"),
         userId: loan.userId,
         name: `Loan Agreement - ${loan.id}`,
         type: 'loan_contract',
@@ -1145,7 +1141,7 @@ export const AppDataProvider = ({ children }: { children: ReactNode }) => {
         const user = users.find(u => u.id === contract.userId);
         if (user) {
           addNotification({
-            id: generateId(),
+            id: generateId("notification"),
             userId: user.id,
             title: 'Loan Contract Ready for Signature',
             message: 'Your loan contract is ready for electronic signature. Please check your email.',
@@ -1237,25 +1233,28 @@ export const useAppData = () => {
 // Mock data generator
 const generateMockData = () => {
   // Generate mock users
-  const mockUsers: User[] = Array(15).fill(null).map((_, index) => ({
+  const mockUsers = Array(15).fill(null).map((_, index) => ({
     id: `user-${index + 1}`,
     firstName: firstNames[Math.floor(Math.random() * firstNames.length)],
     lastName: lastNames[Math.floor(Math.random() * lastNames.length)],
     email: `user${index + 1}@example.com`,
     phone: `555-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-    address: `${Math.floor(Math.random() * 9000) + 1000} ${streets[Math.floor(Math.random() * streets.length)]}, ${cities[Math.floor(Math.random() * cities.length)]}, ${states[Math.floor(Math.random() * states.length)]} ${Math.floor(Math.random() * 90000) + 10000}`,
+    alternativePhone: `555-${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+    idNumber: `${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+    address: `${Math.floor(Math.random() * 9000) + 1000} ${streets[Math.floor(Math.random() * streets.length)]}`,
+    city: cities[Math.floor(Math.random() * cities.length)],
+    state: states[Math.floor(Math.random() * states.length)],
+    zipCode: `${Math.floor(Math.random() * 90000) + 10000}`,
     dateOfBirth: `${1950 + Math.floor(Math.random() * 40)}-${Math.floor(Math.random() * 12) + 1}-${Math.floor(Math.random() * 28) + 1}`,
-    ssn: `${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 90) + 10}-${Math.floor(Math.random() * 9000) + 1000}`,
-    password: 'password123',
-    role: index === 0 ? 'admin' : 'user',
-    createdAt: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString(),
+    accountStatus: "active",
+    registrationDate: new Date(Date.now() - Math.floor(Math.random() * 90) * 24 * 60 * 60 * 1000).toISOString(),
     lastLogin: new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000).toISOString(),
-    activities: [],
-    notifications: [],
     profileCompletionPercentage: Math.floor(Math.random() * 100),
-    documents: []
-  }));
-
+    documents: [],
+    loans: [],
+    role: index === 0 ? 'admin' : 'user',
+  })) as User[];
+  
   // Generate mock loans
   const mockLoans: Loan[] = [];
   
@@ -1422,71 +1421,4 @@ const generateMockData = () => {
     documents: sampleDocuments, 
     applications: [] 
   };
-};
-
-// Load mock data for development
-const loadMockData = () => {
-  // Generate some mock users
-  const mockUsers = [
-    // ... existing mock users
-  ];
-  
-  // Generate some mock documents
-  const mockDocuments = [
-    // ... existing mock documents
-  ];
-  
-  // Generate some mock loans
-  const mockLoans = [
-    // ... existing mock loans
-  ];
-  
-  // Generate some mock notifications
-  const mockNotifications = [
-    // ... existing mock notifications
-  ];
-  
-  // Generate some mock applications
-  const mockApplications: Application[] = [
-    {
-      id: "app123456",
-      userId: "USR-pcvowfdd7",
-      status: "pending",
-      date: "2023-04-01",
-      amount: "R15,000",
-      completion: 60,
-      loanDetails: {
-        purpose: "Personal Loan",
-        term: 24,
-        monthlyPayment: "R750",
-        interestRate: 15.5
-      },
-      requiredAction: "Please upload your latest bank statement to continue processing."
-    },
-    {
-      id: "app789012",
-      userId: "USR-pcvowfdd7",
-      status: "in_review",
-      date: "2023-04-15",
-      amount: "R25,000",
-      completion: 85,
-      loanDetails: {
-        purpose: "Home Improvement",
-        term: 36,
-        monthlyPayment: "R950",
-        interestRate: 12.5
-      }
-    }
-  ];
-  
-  // Set the mock data in state
-  setAppData(prev => ({
-    ...prev,
-    users: mockUsers,
-    documents: mockDocuments,
-    loans: mockLoans,
-    notifications: mockNotifications,
-    applications: mockApplications,
-    currentUser: mockUsers[0]  // Auto-login the first user for development
-  }));
 }; 
