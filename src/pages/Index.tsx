@@ -85,9 +85,12 @@ const Index: React.FC = () => {
                   Get Your Loan <br />
                   <span className="text-primary">Effortlessly</span>
                 </h1>
-                <p className="text-xl text-foreground/70 max-w-lg">
-                  Apply for a loan with our streamlined, user-friendly process. Get the funds you need without the unnecessary complexity.
+                <p className="text-xl font-medium text-primary/90 max-w-xl">
+                  At JB Capital, we empower financial growth with tailored loan solutions, exceptional service, and trusted partnerships for success.
                 </p>
+                {/* <p className="text-xl text-foreground/70 max-w-lg">
+                  Apply for a loan with our streamlined, user-friendly process. Get the funds you need without the unnecessary complexity.
+                </p> */}
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
                   <Link to="/application" className="btn-primary">
                     <span className="flex items-center">

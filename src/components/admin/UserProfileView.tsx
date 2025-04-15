@@ -136,6 +136,10 @@ const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onEditClick }) 
                 <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
                 <p className="text-base">{user.phone || "Not provided"}</p>
               </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Alternative Phone Number</p>
+                <p className="text-base">{user.alternativePhone || "Not provided"}</p>
+              </div>
               <div className="md:col-span-2">
                 <p className="text-sm font-medium text-muted-foreground">Physical Address</p>
                 <p className="text-base">
@@ -191,6 +195,28 @@ const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onEditClick }) 
                 <p className="text-sm font-medium text-muted-foreground">Payment Date</p>
                 <p className="text-base">{user.paymentDate || "Not provided"}</p>
               </div>
+              
+              <div className="md:col-span-2 mt-2">
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">Work Contact Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-3 rounded-md bg-muted/20">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Work Email</p>
+                    <p className="text-base">{user.workEmail || "Not provided"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Work Phone</p>
+                    <p className="text-base">{user.workPhoneNumber || "Not provided"}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-sm font-medium text-muted-foreground">Work Address</p>
+                    <p className="text-base">
+                      {user.workAddress ? 
+                        `${user.workAddress}, ${user.workCity || ''}, ${user.workPostalCode || ''}, ${user.workCountry || 'South Africa'}` 
+                        : "Not provided"}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         )}
@@ -216,6 +242,10 @@ const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onEditClick }) 
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Account Type</p>
                   <p className="text-base capitalize">{user.accountType || "Not provided"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Account Number</p>
+                  <p className="text-base">{user.accountNumber || "Not provided"}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Banking Period</p>
@@ -282,6 +312,18 @@ const UserProfileView: React.FC<UserProfileViewProps> = ({ user, onEditClick }) 
                   
                   <p className="text-sm font-medium text-muted-foreground mt-2">Monthly Debt Payments</p>
                   <p className="text-base">R {user.monthlyDebt?.toLocaleString() || "0"}</p>
+
+                  <p className="text-sm font-medium text-muted-foreground mt-2">Debt to Income Ratio</p>
+                  <p className="text-base">{user.debtToIncomeRatio?.toFixed(2) || "0"}%</p>
+                </div>
+              )}
+
+              {user.additionalFinancialInfo && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Additional Financial Information</p>
+                  <div className="border border-muted p-3 rounded-md bg-muted/10">
+                    <p className="text-sm">{user.additionalFinancialInfo}</p>
+                  </div>
                 </div>
               )}
             </div>

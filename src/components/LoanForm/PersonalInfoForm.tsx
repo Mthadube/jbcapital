@@ -96,6 +96,7 @@ const PersonalInfoForm: React.FC = () => {
       lastName: formData.lastName || "",
       idNumber: formData.idNumber || "",
       phoneNumber: formData.phone || "",
+      alternativePhoneNumber: (formData as any).alternativePhone || "",
       email: formData.email || "",
       password: formData.password || "",
       confirmPassword: formData.confirmPassword || "",
@@ -174,6 +175,8 @@ const PersonalInfoForm: React.FC = () => {
       lastName: data.lastName,
       idNumber: data.idNumber,
       phone: data.phoneNumber,
+      // Use type assertion to avoid TypeScript errors
+      ...{ alternativePhone: data.alternativePhoneNumber },
       email: data.email,
       password: data.password,
       confirmPassword: data.confirmPassword,
@@ -316,6 +319,25 @@ const PersonalInfoForm: React.FC = () => {
             />
             {errors.phoneNumber && (
               <p className="text-sm text-destructive mt-1">{errors.phoneNumber.message}</p>
+            )}
+          </div>
+          
+          <div>
+            <Label htmlFor="alternativePhoneNumber" className="label">Alternative Contact Number</Label>
+            <Controller
+              name="alternativePhoneNumber"
+              control={control}
+              render={({ field }) => (
+                <Input 
+                  id="alternativePhoneNumber"
+                  className={`form-input ${errors.alternativePhoneNumber ? 'border-destructive' : ''}`}
+                  placeholder="0123456789"
+                  {...field}
+                />
+              )}
+            />
+            {errors.alternativePhoneNumber && (
+              <p className="text-sm text-destructive mt-1">{errors.alternativePhoneNumber.message}</p>
             )}
           </div>
           
