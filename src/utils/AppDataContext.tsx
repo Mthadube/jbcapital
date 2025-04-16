@@ -50,6 +50,7 @@ export interface User {
   country?: string;
   employmentStatus?: string;
   employmentType?: string;
+  otherEmploymentType?: string;
   employmentSector?: string;
   employerName?: string;
   jobTitle?: string;

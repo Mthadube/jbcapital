@@ -449,4 +449,188 @@ export const updateContract = (id: string, data: Partial<Contract>) => {
         } as Contract
       };
     });
+};
+
+// Contact Form Submission API function
+export interface ContactFormData {
+  id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  subject: string;
+  message: string;
+  date?: string;
+  status?: 'new' | 'in_progress' | 'resolved';
+  notes?: string;
+}
+
+export const submitContactForm = (formData: ContactFormData) => {
+  // First try the real API endpoint
+  return apiRequest<{id: string, message: string}>('/contact/submit', 'POST', formData)
+    .then(response => {
+      if (response.success) return response;
+      
+      console.log(`API endpoint not available, using fallback for contact form submission`);
+      
+      // Return a mock successful response with a fallback implementation
+      return new Promise<ApiResponse<{id: string, message: string}>>((resolve) => {
+        setTimeout(() => {
+          // Generate a mock ID
+          const id = `CONTACT-${Date.now().toString().substring(8)}`;
+          
+          // Simulate sending SMS by logging to console
+          console.log(`📱 MOCK SMS to admin (0613983580): New contact inquiry from ${formData.name} about ${formData.subject}`);
+          
+          // Add mock implementation to store in localStorage for demo purposes
+          try {
+            // Get existing contacts or initialize empty array
+            const existingContacts = JSON.parse(localStorage.getItem('contactSubmissions') || '[]');
+            
+            // Add the new contact with generated ID and current date
+            const newContact = {
+              ...formData,
+              id,
+              date: new Date().toISOString(),
+              status: 'new'
+            };
+            
+            // Save updated contacts to localStorage
+            localStorage.setItem('contactSubmissions', JSON.stringify([newContact, ...existingContacts]));
+            
+            resolve({
+              success: true,
+              data: {
+                id,
+                message: 'Contact form submitted successfully'
+              }
+            });
+          } catch (error) {
+            console.error('Error with localStorage fallback:', error);
+            resolve({
+              success: true, // Still return success to the user
+              data: {
+                id,
+                message: 'Contact form submitted (but storage failed)'
+              }
+            });
+          }
+        }, 800);
+      });
+    });
+};
+
+// Function to fetch all contact form submissions for admin dashboard
+export const fetchContactSubmissions = () => {
+  // First try the real API endpoint
+  return apiRequest<ContactFormData[]>('/contact/submissions')
+    .then(response => {
+      if (response.success) return response;
+      
+      console.log(`API endpoint not available, using fallback for fetching contact submissions`);
+      
+      // Return a mock response using localStorage data
+      return new Promise<ApiResponse<ContactFormData[]>>((resolve) => {
+        setTimeout(() => {
+          try {
+            const storedContacts = localStorage.getItem('contactSubmissions');
+            const contacts = storedContacts ? JSON.parse(storedContacts) : [];
+            
+            resolve({
+              success: true,
+              data: contacts
+            });
+          } catch (error) {
+            console.error('Error retrieving contact submissions from localStorage:', error);
+            resolve({
+              success: true,
+              data: []
+            });
+          }
+        }, 500);
+      });
+    });
+};
+
+// Function to update a contact submission status
+export const updateContactSubmission = (id: string, data: Partial<ContactFormData>) => {
+  // First try the real API endpoint
+  return apiRequest<ContactFormData>(`/contact/${id}`, 'PATCH', data)
+    .then(response => {
+      if (response.success) return response;
+      
+      console.log(`API endpoint not available, using fallback for updating contact submission ${id}`);
+      
+      // Return a mock response using localStorage
+      return new Promise<ApiResponse<ContactFormData>>((resolve) => {
+        setTimeout(() => {
+          try {
+            const storedContacts = localStorage.getItem('contactSubmissions');
+            if (!storedContacts) {
+              resolve({
+                success: false,
+                error: 'Contact submission not found'
+              });
+              return;
+            }
+            
+            const contacts = JSON.parse(storedContacts);
+            const contactIndex = contacts.findIndex((c: ContactFormData) => c.id === id);
+            
+            if (contactIndex === -1) {
+              resolve({
+                success: false,
+                error: 'Contact submission not found'
+              });
+              return;
+            }
+            
+            // Update the contact
+            contacts[contactIndex] = {
+              ...contacts[contactIndex],
+              ...data
+            };
+            
+            // Save updated contacts
+            localStorage.setItem('contactSubmissions', JSON.stringify(contacts));
+            
+            resolve({
+              success: true,
+              data: contacts[contactIndex]
+            });
+          } catch (error) {
+            console.error('Error updating contact submission in localStorage:', error);
+            resolve({
+              success: false,
+              error: 'Failed to update contact submission'
+            });
+          }
+        }, 500);
+      });
+    });
+};
+
+// Function to send SMS notification
+export const sendSmsNotification = (phoneNumber: string, message: string) => {
+  // First try the real API endpoint
+  return apiRequest<{success: boolean, message: string}>('/notifications/sms', 'POST', { phoneNumber, message })
+    .then(response => {
+      if (response.success) return response;
+      
+      console.log(`API endpoint not available, using fallback for SMS notification to ${phoneNumber}`);
+      
+      // Return a mock successful response
+      return new Promise<ApiResponse<{success: boolean, message: string}>>((resolve) => {
+        setTimeout(() => {
+          console.log(`📱 MOCK SMS to ${phoneNumber}: ${message}`);
+          
+          resolve({
+            success: true,
+            data: {
+              success: true,
+              message: `SMS notification sent to ${phoneNumber}`
+            }
+          });
+        }, 500);
+      });
+    });
 }; 

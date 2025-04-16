@@ -146,16 +146,24 @@ const personalInfoBaseSchema = z.object({
   postalCode: z.string().regex(/^\d{4}$/, "Please enter a valid 4-digit postal code"),
 });
 
-export const personalInfoSchema = personalInfoBaseSchema.refine(
-  (data) => data.password === data.confirmPassword, 
-  {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  }
-);
+export const personalInfoSchema = personalInfoBaseSchema
+  .refine(
+    (data) => data.password === data.confirmPassword, 
+    {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    }
+  )
+  .refine(
+    (data) => data.phoneNumber !== data.alternativePhoneNumber,
+    {
+      message: "Alternative phone number must be different from your main phone number",
+      path: ["alternativePhoneNumber"],
+    }
+  );
 
-// Employment Information Schema
-export const employmentInfoSchema = z.object({
+// Employment Information Schema base (without refinements)
+const employmentInfoBaseSchema = z.object({
   employmentStatus: z.enum(["employed", "self-employed", "unemployed", "retired"], {
     errorMap: () => ({ message: "Please select an employment status" }),
   }),
@@ -167,6 +175,7 @@ export const employmentInfoSchema = z.object({
   employmentType: z.enum(["full-time", "part-time", "contract", "temporary", "other"], {
     errorMap: () => ({ message: "Please select an employment type" }),
   }),
+  otherEmploymentType: z.string().optional(),
   employmentSector: z.string().min(2, "Employment sector must be at least 2 characters"),
   workAddress: z.string().min(5, "Work address must be at least 5 characters"),
   workCity: z.string().min(2, "City must be at least 2 characters"),
@@ -174,6 +183,18 @@ export const employmentInfoSchema = z.object({
   workPostalCode: z.string().regex(/^\d{4}$/, "Please enter a valid 4-digit postal code"),
   workEmail: z.string().email("Please enter a valid email address"),
   workPhoneNumber: z.string().regex(/^0\d{9}$/, "Please enter a valid 10-digit phone number starting with 0"),
+});
+
+// Export the schema with refinements
+export const employmentInfoSchema = employmentInfoBaseSchema.refine((data) => {
+  // If employment type is "other", then otherEmploymentType must be provided
+  if (data.employmentType === "other") {
+    return !!data.otherEmploymentType && data.otherEmploymentType.length >= 2;
+  }
+  return true;
+}, {
+  message: "Please specify your employment type",
+  path: ["otherEmploymentType"],
 });
 
 // Financial Information Schema
@@ -226,13 +247,24 @@ export const documentSchema = z.object({
 // Combined schema for the entire form - use spread instead of merge
 export const completeFormSchema = z.object({
   ...personalInfoBaseSchema.shape,
-  ...employmentInfoSchema.shape,
+  ...employmentInfoBaseSchema.shape,
   ...financialInfoSchema.shape,
   ...loanDetailsSchema.shape,
   ...documentSchema.shape
-}).refine((data) => data.password === data.confirmPassword, {
+})
+.refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
+})
+.refine((data) => {
+  // If employment type is "other", then otherEmploymentType must be provided
+  if (data.employmentType === "other") {
+    return !!data.otherEmploymentType && data.otherEmploymentType.length >= 2;
+  }
+  return true;
+}, {
+  message: "Please specify your employment type",
+  path: ["otherEmploymentType"],
 });
 
 export type PersonalInfoFormData = z.infer<typeof personalInfoSchema>;

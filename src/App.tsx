@@ -16,6 +16,7 @@ import UserProfileDashboard from "./pages/UserProfileDashboard";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 import { AppDataProvider } from "./utils/AppDataContext";
 import { ThemeProvider } from "./utils/ThemeProvider";
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/eligibility" element={<Eligibility />} />
               <Route path="/documents" element={<DocumentUpload />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/application/:id" element={<ApplicationDetail />} />
               <Route path="/admin/applications/:id" element={<ApplicationDetail />} />

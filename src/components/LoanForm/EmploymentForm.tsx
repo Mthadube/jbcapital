@@ -29,6 +29,7 @@ const EmploymentForm: React.FC = () => {
       yearsEmployed: formData.yearsEmployed || 0,
       monthlyIncome: formData.monthlyIncome || 0,
       employmentType: formData.employmentType || "full-time",
+      otherEmploymentType: formData.otherEmploymentType || "",
       employmentSector: formData.employmentSector || "",
       workAddress: (formData as any).workAddress || "",
       workCity: (formData as any).workCity || "",
@@ -57,6 +58,7 @@ const EmploymentForm: React.FC = () => {
       if ((currentUser as any).workEmail) setValue('workEmail', (currentUser as any).workEmail);
       if ((currentUser as any).workPhoneNumber) setValue('workPhoneNumber', (currentUser as any).workPhoneNumber);
       if (currentUser.paymentDate) setValue('paymentDate', currentUser.paymentDate);
+      if ((currentUser as any).otherEmploymentType) setValue('otherEmploymentType', (currentUser as any).otherEmploymentType);
     }
   }, [currentUser, setValue]);
   
@@ -77,7 +79,8 @@ const EmploymentForm: React.FC = () => {
         workPostalCode: data.workPostalCode,
         workEmail: data.workEmail,
         workPhoneNumber: data.workPhoneNumber,
-        paymentDate: data.paymentDate
+        paymentDate: data.paymentDate,
+        otherEmploymentType: data.otherEmploymentType
       }
     });
     
@@ -87,9 +90,11 @@ const EmploymentForm: React.FC = () => {
   
   // Watch for employment status to conditionally show employment details
   const employmentStatus = watch("employmentStatus");
+  const employmentType = watch("employmentType");
   const showEmploymentDetails = 
     employmentStatus === "employed" || 
     employmentStatus === "self-employed";
+  const showOtherEmploymentType = employmentType === "other";
   
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fade-in">
@@ -154,6 +159,27 @@ const EmploymentForm: React.FC = () => {
                     <p className="text-sm text-destructive mt-1">{errors.employmentType.message}</p>
                   )}
                 </div>
+                
+                {showOtherEmploymentType && (
+                  <div>
+                    <Label htmlFor="otherEmploymentType" className="label">Specify Employment Type</Label>
+                    <Controller
+                      name="otherEmploymentType"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          id="otherEmploymentType"
+                          className={`form-input ${errors.otherEmploymentType ? 'border-destructive' : ''}`}
+                          placeholder="Please specify your employment type"
+                          {...field}
+                        />
+                      )}
+                    />
+                    {errors.otherEmploymentType && (
+                      <p className="text-sm text-destructive mt-1">{errors.otherEmploymentType.message}</p>
+                    )}
+                  </div>
+                )}
                 
                 <div>
                   <Label htmlFor="employmentSector" className="label">Industry/Sector</Label>

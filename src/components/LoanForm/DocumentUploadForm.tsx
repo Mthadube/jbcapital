@@ -27,7 +27,7 @@ const requiredDocuments = [
   { 
     id: 'selfieWithID', 
     name: 'Selfie with ID', 
-    description: 'Selfie holding the ID document (new requirement)',
+    description: 'Selfie holding the ID document',
     required: true,
     accepted: ".jpg,.jpeg,.png"
   },
@@ -41,7 +41,7 @@ const requiredDocuments = [
   { 
     id: 'bankStatements', 
     name: 'Bank Statements', 
-    description: 'Last 3 months of bank statements',
+    description: 'Latest 3 months of bank statements',
     required: true,
     accepted: ".pdf,.csv,.xls,.xlsx"
   },
