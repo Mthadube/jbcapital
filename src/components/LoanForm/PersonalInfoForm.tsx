@@ -80,15 +80,17 @@ const PersonalInfoForm: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [idInfo, setIdInfo] = useState<ReturnType<typeof parseSouthAfricanID>>(null);
+  const [showAllErrors, setShowAllErrors] = useState(false);
   
   const { 
     control, 
     handleSubmit, 
-    formState: { errors }, 
+    formState: { errors, isValid, isSubmitted }, 
     setValue, 
     watch,
     setError,
-    clearErrors 
+    clearErrors,
+    trigger
   } = useForm<PersonalInfoFormData>({
     resolver: zodResolver(personalInfoSchema),
     defaultValues: {
@@ -108,8 +110,23 @@ const PersonalInfoForm: React.FC = () => {
     }
   });
   
-  // Watch ID number for changes
+  // Watch for phone number changes
   const idNumberValue = watch('idNumber');
+  const phoneNumber = watch('phoneNumber');
+  const alternativePhoneNumber = watch('alternativePhoneNumber');
+  
+  // Check if alternative phone number is the same as the main phone number
+  useEffect(() => {
+    if (alternativePhoneNumber && phoneNumber && alternativePhoneNumber === phoneNumber) {
+      setError('alternativePhoneNumber', {
+        type: 'manual',
+        message: 'Alternative phone number must be different from your main phone number'
+      });
+    } else if (alternativePhoneNumber) {
+      // Clear the error if it was set and the numbers are now different
+      clearErrors('alternativePhoneNumber');
+    }
+  }, [phoneNumber, alternativePhoneNumber, setError, clearErrors]);
   
   // Parse ID number when it changes
   useEffect(() => {
@@ -145,6 +162,21 @@ const PersonalInfoForm: React.FC = () => {
   }, [idNumberValue, updateFormData, setError, clearErrors]);
   
   const onSubmit = (data: PersonalInfoFormData) => {
+    // Check if alternative phone number is the same as the main phone number
+    if (data.phoneNumber === data.alternativePhoneNumber) {
+      setError('alternativePhoneNumber', {
+        type: 'manual',
+        message: 'Alternative phone number must be different from your main phone number'
+      });
+      return;
+    }
+    
+    if (!isValid) {
+      setShowAllErrors(true);
+      toast.error("Please fill in all required fields correctly");
+      return;
+    }
+    
     if (data.password !== data.confirmPassword) {
       toast.error("Passwords do not match");
       return;
@@ -209,6 +241,16 @@ const PersonalInfoForm: React.FC = () => {
       )
     : addressSuggestions;
   
+  // Function to validate all fields before submission
+  const validateAllFields = async () => {
+    const result = await trigger();
+    if (!result) {
+      setShowAllErrors(true);
+      toast.error("Please fix all highlighted errors before continuing");
+    }
+    return result;
+  };
+  
   // South African provinces
   const provinces = [
     "Eastern Cape", 
@@ -236,7 +278,7 @@ const PersonalInfoForm: React.FC = () => {
               render={({ field }) => (
                 <Input 
                   id="firstName"
-                  className={`form-input ${errors.firstName ? 'border-destructive' : ''}`}
+                  className={`form-input ${(errors.firstName || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                   placeholder="John"
                   {...field}
                 />
@@ -244,6 +286,9 @@ const PersonalInfoForm: React.FC = () => {
             />
             {errors.firstName && (
               <p className="text-sm text-destructive mt-1">{errors.firstName.message}</p>
+            )}
+            {showAllErrors && !errors.firstName && !watch('firstName') && (
+              <p className="text-sm text-destructive mt-1">First name is required</p>
             )}
           </div>
           
@@ -255,7 +300,7 @@ const PersonalInfoForm: React.FC = () => {
               render={({ field }) => (
                 <Input 
                   id="lastName"
-                  className={`form-input ${errors.lastName ? 'border-destructive' : ''}`}
+                  className={`form-input ${(errors.lastName || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                   placeholder="Doe"
                   {...field}
                 />
@@ -263,6 +308,9 @@ const PersonalInfoForm: React.FC = () => {
             />
             {errors.lastName && (
               <p className="text-sm text-destructive mt-1">{errors.lastName.message}</p>
+            )}
+            {showAllErrors && !errors.lastName && !watch('lastName') && (
+              <p className="text-sm text-destructive mt-1">Last name is required</p>
             )}
           </div>
           
@@ -274,7 +322,7 @@ const PersonalInfoForm: React.FC = () => {
               render={({ field }) => (
                 <Input 
                   id="idNumber"
-                  className={`form-input ${errors.idNumber ? 'border-destructive' : ''}`}
+                  className={`form-input ${(errors.idNumber || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                   placeholder="9001010000000"
                   maxLength={13}
                   {...field}
@@ -283,6 +331,9 @@ const PersonalInfoForm: React.FC = () => {
             />
             {errors.idNumber && (
               <p className="text-sm text-destructive mt-1">{errors.idNumber.message}</p>
+            )}
+            {showAllErrors && !errors.idNumber && !watch('idNumber') && (
+              <p className="text-sm text-destructive mt-1">ID number is required</p>
             )}
             
             {/* Display extracted info when ID number is valid */}
@@ -311,7 +362,7 @@ const PersonalInfoForm: React.FC = () => {
               render={({ field }) => (
                 <Input 
                   id="phoneNumber"
-                  className={`form-input ${errors.phoneNumber ? 'border-destructive' : ''}`}
+                  className={`form-input ${(errors.phoneNumber || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                   placeholder="0123456789"
                   {...field}
                 />
@@ -319,6 +370,9 @@ const PersonalInfoForm: React.FC = () => {
             />
             {errors.phoneNumber && (
               <p className="text-sm text-destructive mt-1">{errors.phoneNumber.message}</p>
+            )}
+            {showAllErrors && !errors.phoneNumber && !watch('phoneNumber') && (
+              <p className="text-sm text-destructive mt-1">Phone number is required</p>
             )}
           </div>
           
@@ -330,7 +384,7 @@ const PersonalInfoForm: React.FC = () => {
               render={({ field }) => (
                 <Input 
                   id="alternativePhoneNumber"
-                  className={`form-input ${errors.alternativePhoneNumber ? 'border-destructive' : ''}`}
+                  className={`form-input ${(errors.alternativePhoneNumber || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                   placeholder="0123456789"
                   {...field}
                 />
@@ -339,6 +393,10 @@ const PersonalInfoForm: React.FC = () => {
             {errors.alternativePhoneNumber && (
               <p className="text-sm text-destructive mt-1">{errors.alternativePhoneNumber.message}</p>
             )}
+            {showAllErrors && !errors.alternativePhoneNumber && !watch('alternativePhoneNumber') && (
+              <p className="text-sm text-destructive mt-1">Alternative phone number is required</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">Must be different from your main phone number</p>
           </div>
           
           <div>
@@ -350,7 +408,7 @@ const PersonalInfoForm: React.FC = () => {
                 <Input 
                   id="email"
                   type="email"
-                  className={`form-input ${errors.email ? 'border-destructive' : ''}`}
+                  className={`form-input ${(errors.email || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                   placeholder="john.doe@example.com"
                   {...field}
                 />
@@ -358,6 +416,9 @@ const PersonalInfoForm: React.FC = () => {
             />
             {errors.email && (
               <p className="text-sm text-destructive mt-1">{errors.email.message}</p>
+            )}
+            {showAllErrors && !errors.email && !watch('email') && (
+              <p className="text-sm text-destructive mt-1">Email is required</p>
             )}
           </div>
 
@@ -371,7 +432,7 @@ const PersonalInfoForm: React.FC = () => {
                   <Input 
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    className={`form-input ${errors.password ? 'border-destructive' : ''}`}
+                    className={`form-input ${(errors.password || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                     placeholder="••••••••"
                     {...field}
                   />
@@ -389,6 +450,9 @@ const PersonalInfoForm: React.FC = () => {
             {errors.password && (
               <p className="text-sm text-destructive mt-1">{errors.password.message}</p>
             )}
+            {showAllErrors && !errors.password && !watch('password') && (
+              <p className="text-sm text-destructive mt-1">Password is required</p>
+            )}
           </div>
 
           <div className="relative">
@@ -401,7 +465,7 @@ const PersonalInfoForm: React.FC = () => {
                   <Input 
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    className={`form-input ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                    className={`form-input ${(errors.confirmPassword || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
                     placeholder="••••••••"
                     {...field}
                   />
@@ -419,6 +483,9 @@ const PersonalInfoForm: React.FC = () => {
             {errors.confirmPassword && (
               <p className="text-sm text-destructive mt-1">{errors.confirmPassword.message}</p>
             )}
+            {showAllErrors && !errors.confirmPassword && !watch('confirmPassword') && (
+              <p className="text-sm text-destructive mt-1">Confirm password is required</p>
+            )}
           </div>
         </div>
       </div>
@@ -428,11 +495,141 @@ const PersonalInfoForm: React.FC = () => {
         <p className="text-foreground/70 mb-4">Start typing your address to see suggestions from Google Maps</p>
         
         <div className="grid grid-cols-1 gap-6">
-          <PlacesAutocomplete
-            onAddressSelect={handleAddressSelect}
-            error={errors.address?.message}
-            defaultValue={watch('address')}
-          />
+          <div>
+            <Label htmlFor="address" className="label">Street Address</Label>
+            <Controller
+              name="address"
+              control={control}
+              render={({ field }) => (
+                <Input 
+                  id="address"
+                  className={`form-input ${(errors.address || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
+                  placeholder="123 Main Street"
+                  {...field}
+                />
+              )}
+            />
+            {errors.address && (
+              <p className="text-sm text-destructive mt-1">{errors.address.message}</p>
+            )}
+            {showAllErrors && !errors.address && !watch('address') && (
+              <p className="text-sm text-destructive mt-1">Address is required</p>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="suburb" className="label">Suburb</Label>
+              <Controller
+                name="suburb"
+                control={control}
+                render={({ field }) => (
+                  <Input 
+                    id="suburb"
+                    className={`form-input ${(errors.suburb || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
+                    placeholder="Suburb"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.suburb && (
+                <p className="text-sm text-destructive mt-1">{errors.suburb.message}</p>
+              )}
+              {showAllErrors && !errors.suburb && !watch('suburb') && (
+                <p className="text-sm text-destructive mt-1">Suburb is required</p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="city" className="label">City</Label>
+              <Controller
+                name="city"
+                control={control}
+                render={({ field }) => (
+                  <Input 
+                    id="city"
+                    className={`form-input ${(errors.city || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
+                    placeholder="City"
+                    {...field}
+                  />
+                )}
+              />
+              {errors.city && (
+                <p className="text-sm text-destructive mt-1">{errors.city.message}</p>
+              )}
+              {showAllErrors && !errors.city && !watch('city') && (
+                <p className="text-sm text-destructive mt-1">City is required</p>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="province" className="label">Province</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className={`w-full justify-between ${(errors.province || (showAllErrors && !watch('province'))) ? 'border-destructive' : ''}`}
+                  >
+                    {watch('province') || "Select a province"}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <div className="max-h-[200px] overflow-y-auto">
+                    {provinces.map((province) => (
+                      <div
+                        key={province}
+                        className={`flex items-center px-4 py-2 cursor-pointer hover:bg-accent ${
+                          watch('province') === province ? 'bg-accent' : ''
+                        }`}
+                        onClick={() => {
+                          setValue('province', province);
+                          clearErrors('province');
+                        }}
+                      >
+                        <span>{province}</span>
+                        {watch('province') === province && (
+                          <Check className="ml-auto h-4 w-4" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {errors.province && (
+                <p className="text-sm text-destructive mt-1">{errors.province.message}</p>
+              )}
+              {showAllErrors && !errors.province && !watch('province') && (
+                <p className="text-sm text-destructive mt-1">Province is required</p>
+              )}
+            </div>
+            
+            <div>
+              <Label htmlFor="postalCode" className="label">Postal Code</Label>
+              <Controller
+                name="postalCode"
+                control={control}
+                render={({ field }) => (
+                  <Input 
+                    id="postalCode"
+                    className={`form-input ${(errors.postalCode || (showAllErrors && !field.value)) ? 'border-destructive' : ''}`}
+                    placeholder="0000"
+                    maxLength={4}
+                    {...field}
+                  />
+                )}
+              />
+              {errors.postalCode && (
+                <p className="text-sm text-destructive mt-1">{errors.postalCode.message}</p>
+              )}
+              {showAllErrors && !errors.postalCode && !watch('postalCode') && (
+                <p className="text-sm text-destructive mt-1">Postal code is required</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       
@@ -442,17 +639,27 @@ const PersonalInfoForm: React.FC = () => {
           id="terms" 
           checked={termsAccepted}
           onChange={(e) => setTermsAccepted(e.target.checked)}
-          className="rounded border-gray-300 text-primary focus:ring-primary" 
+          className={`rounded border-gray-300 text-primary focus:ring-primary ${showAllErrors && !termsAccepted ? 'border-destructive' : ''}`}
         />
-        <label htmlFor="terms" className="text-sm">
+        <label htmlFor="terms" className={`text-sm ${showAllErrors && !termsAccepted ? 'text-destructive' : ''}`}>
           I accept the <a href="#" className="text-primary hover:underline">terms and conditions</a>
         </label>
       </div>
+      {showAllErrors && !termsAccepted && (
+        <p className="text-sm text-destructive mt-1">You must accept the terms and conditions</p>
+      )}
       
       <div className="flex justify-end mt-8">
         <button 
-          type="submit"
+          type="button"
           className="btn-primary min-w-[150px]"
+          onClick={async () => {
+            // First validate all fields
+            const isValid = await validateAllFields();
+            if (isValid) {
+              handleSubmit(onSubmit)();
+            }
+          }}
         >
           Continue
         </button>

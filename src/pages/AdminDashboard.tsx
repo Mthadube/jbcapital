@@ -8,6 +8,7 @@ import DocumentManagement from "@/components/admin/DocumentManagement";
 import RiskAssessment from "@/components/admin/RiskAssessment";
 import ReportsAnalytics from "@/components/admin/ReportsAnalytics";
 import DataManagement from "@/components/admin/DataManagement";
+import ContactSubmissions from "@/components/admin/ContactSubmissions";
 import ContractManagement from "@/components/admin/ContractManagement";
 import DisplaySettings from "@/components/admin/DisplaySettings";
 import { useLocation, useNavigate, Link } from "react-router-dom";
@@ -47,7 +48,8 @@ import {
   Check,
   X,
   ActivityIcon,
-  History
+  History,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/utils/AppDataContext";
@@ -273,6 +275,20 @@ const AdminDashboard = () => {
                         <span>Database</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton 
+                        isActive={activeTab === "contacts"} 
+                        onClick={() => setActiveTab("contacts")}
+                        tooltip="Contact Submissions"
+                        className={cn(
+                          "text-white hover:bg-white/10",
+                          activeTab === "contacts" && "bg-white/20 font-medium hover:bg-white/20"
+                        )}
+                      >
+                        <MessageSquare className="h-4 w-4 text-pink-300" />
+                        <span>Contacts</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
                   </SidebarMenu>
                 </SidebarGroup>
                 
@@ -366,7 +382,7 @@ const AdminDashboard = () => {
               </div>
               
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 w-full bg-white/50 p-1 backdrop-blur-sm rounded-xl shadow-sm border border-blue-50">
+                <TabsList className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-10 w-full bg-white/50 p-1 backdrop-blur-sm rounded-xl shadow-sm border border-blue-50">
                   <TabsTrigger value="overview" className="relative data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700">
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-300 rounded-full data-[state=inactive]:opacity-0" data-state={activeTab === "overview" ? "active" : "inactive"} />
                     <Home className="h-4 w-4 text-blue-500 mr-2" />
@@ -407,6 +423,11 @@ const AdminDashboard = () => {
                     <ShieldAlert className="h-4 w-4 text-red-500 mr-2" />
                     Risk
                   </TabsTrigger>
+                  <TabsTrigger value="contacts" className="relative data-[state=active]:bg-pink-50 data-[state=active]:text-pink-700">
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-pink-300 rounded-full data-[state=inactive]:opacity-0" data-state={activeTab === "contacts" ? "active" : "inactive"} />
+                    <MessageSquare className="h-4 w-4 text-pink-500 mr-2" />
+                    Contacts
+                  </TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="overview" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-5 duration-300">
@@ -439,6 +460,10 @@ const AdminDashboard = () => {
                 
                 <TabsContent value="risk" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-5 duration-300">
                   <RiskAssessment />
+                </TabsContent>
+                
+                <TabsContent value="contacts" className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-5 duration-300">
+                  <ContactSubmissions />
                 </TabsContent>
                 
                 <TabsContent value="database" className="p-6 h-full overflow-auto">
