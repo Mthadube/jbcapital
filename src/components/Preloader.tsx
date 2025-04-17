@@ -32,11 +32,11 @@ const Preloader: React.FC<PreloaderProps> = ({
       }
     }, minDisplayTime);
     
-    // Staggered animation stages
+    // Staggered animation stages (exclude logo, which is visible immediately)
     const stageTimeouts = [
-      setTimeout(() => setAnimationStage(1), 200),
-      setTimeout(() => setAnimationStage(2), 400),
-      setTimeout(() => setAnimationStage(3), 600),
+      setTimeout(() => setAnimationStage(1), 400),
+      setTimeout(() => setAnimationStage(2), 600),
+      setTimeout(() => setAnimationStage(3), 800),
     ];
     
     return () => {
@@ -84,13 +84,13 @@ const Preloader: React.FC<PreloaderProps> = ({
       }`}
     >
       <div className="w-full max-w-md px-6 flex flex-col items-center">
-        {/* Logo */}
-        <div className={`mb-8 animate-float ${getAnimationClass(1)}`} style={{ transitionDelay: '100ms' }}>
+        {/* Logo - always visible from the start */}
+        <div className="mb-8 animate-float opacity-100">
           <img src="/logo.png" alt="JB Capital" className="h-20" />
         </div>
         
         {/* Loading bar */}
-        <div className={`w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-4 ${getAnimationClass(2)}`} style={{ transitionDelay: '200ms' }}>
+        <div className={`w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mb-4 ${getAnimationClass(1)}`} style={{ transitionDelay: '200ms' }}>
           <div 
             className="h-full bg-gradient-to-r from-blue-500 to-primary rounded-full transition-all duration-300 ease-out relative overflow-hidden"
             style={{ width: `${progress}%` }}
@@ -100,7 +100,7 @@ const Preloader: React.FC<PreloaderProps> = ({
         </div>
         
         {/* Loading text */}
-        <div className={`text-center ${getAnimationClass(3)}`} style={{ transitionDelay: '300ms' }}>
+        <div className={`text-center ${getAnimationClass(2)}`} style={{ transitionDelay: '300ms' }}>
           <p className="text-foreground/70 mb-2">Loading your experience</p>
           <p className="text-sm font-medium text-primary">{Math.round(progress)}%</p>
         </div>
