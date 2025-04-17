@@ -85,9 +85,9 @@ const Preloader: React.FC<PreloaderProps> = ({
     >
       <div className="w-full max-w-md px-6 flex flex-col items-center">
         {/* Logo - always visible from the start with rotating circle around it */}
-        <div className="mb-8 relative">
+        <div className="mb-12 relative w-40 h-40 flex items-center justify-center">
           {/* Rotating circle animation */}
-          <div className="absolute -inset-[15%] pointer-events-none">
+          <div className="absolute inset-0 scale-[2.2] pointer-events-none">
             <svg className="w-full h-full animate-spin-slow" viewBox="0 0 200 200">
               <defs>
                 <linearGradient id="circleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -96,15 +96,15 @@ const Preloader: React.FC<PreloaderProps> = ({
                   <stop offset="100%" stopColor="#0066cc" stopOpacity="0.1" />
                 </linearGradient>
               </defs>
-              <circle cx="100" cy="100" r="90" fill="none" stroke="url(#circleGradient)" strokeWidth="3" strokeDasharray="30 15" />
-              <circle cx="100" cy="100" r="90" fill="none" stroke="#0066cc" strokeWidth="1" strokeOpacity="0.3" />
-              <circle cx="100" cy="30" r="4" fill="#0066cc" />
+              <circle cx="100" cy="100" r="98" fill="none" stroke="url(#circleGradient)" strokeWidth="2" strokeDasharray="20 10" />
+              <circle cx="100" cy="100" r="98" fill="none" stroke="#0066cc" strokeWidth="0.5" strokeOpacity="0.3" />
+              <circle cx="100" cy="2" r="3" fill="#0066cc" />
             </svg>
           </div>
           
           {/* Logo with float animation */}
-          <div className="animate-float opacity-100 relative z-10">
-            <img src="/logo.png" alt="JB Capital" className="h-20" />
+          <div className="animate-float opacity-100 z-10">
+            <img src="/logo.png" alt="JB Capital" className="h-16" />
           </div>
         </div>
         
