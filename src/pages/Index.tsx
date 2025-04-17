@@ -12,18 +12,30 @@ import {
 import { scrollToTop } from "@/components/ScrollToTop";
 
 const Index: React.FC = () => {
+  // Start with loading true by default to show the preloader immediately
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
+    // Ensure preloader is visible immediately
+    document.body.style.overflow = 'hidden';
+    
     scrollToTop(false); // Use instant scrolling on page load
+    
+    // Clean up function to restore overflow when component unmounts
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, []);
   
   const handleLoadingComplete = () => {
+    // Restore scrolling after preloader finishes
+    document.body.style.overflow = '';
     setLoading(false);
   };
 
   return (
     <>
+      {/* Preloader is always shown initially */}
       {loading && <Preloader onLoadingComplete={handleLoadingComplete} />}
       
       <div className={`min-h-screen flex flex-col transition-opacity duration-500 ${loading ? 'opacity-0' : 'opacity-100'}`}>
