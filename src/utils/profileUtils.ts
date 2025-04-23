@@ -43,7 +43,7 @@ export const calculateProfileCompletion = (user: User): number => {
   const requiredDocumentTypes = ['id', 'proof_of_residence', 'bank_statement', 'payslip'];
   totalFields += requiredDocumentTypes.length;
   
-  // Count verified documents as 1 point, pending documents as 0.5 points
+  // Count verified documents as 1 point, pending documents as 1 point
   if (user.documents && user.documents.length > 0) {
     requiredDocumentTypes.forEach(docType => {
       const matchingDocs = user.documents.filter(doc => doc.type === docType);
@@ -52,9 +52,9 @@ export const calculateProfileCompletion = (user: User): number => {
         if (matchingDocs.some(doc => doc.verificationStatus === 'verified')) {
           completedFields += 1;
         } 
-        // If any document of this type is pending, count as partial
+        // If any document of this type is pending, count as complete (not partial)
         else if (matchingDocs.some(doc => doc.verificationStatus === 'pending')) {
-          completedFields += 0.5;
+          completedFields += 1;
         }
       }
     });
@@ -113,11 +113,9 @@ export const getIncompleteProfileItems = (user: User): string[] => {
     requiredDocumentTypes.forEach(docType => {
       if (!user.documents.some(doc => doc.type === docType)) {
         incompleteItems.push(`Upload ${getDocumentTypeDisplayName(docType)}`);
-      } else if (!user.documents.some(doc => doc.type === docType && doc.verificationStatus === 'verified')) {
-        // Only show document as incomplete if it's not verified (pending counts as incomplete)
-        if (user.documents.some(doc => doc.type === docType && doc.verificationStatus === 'rejected')) {
-          incompleteItems.push(`Reupload ${getDocumentTypeDisplayName(docType)} (rejected)`);
-        }
+      } else if (!user.documents.some(doc => doc.type === docType && (doc.verificationStatus === 'verified' || doc.verificationStatus === 'pending'))) {
+        // Only show document as incomplete if it's rejected (pending counts as complete)
+        incompleteItems.push(`Reupload ${getDocumentTypeDisplayName(docType)} (rejected)`);
       }
     });
   }

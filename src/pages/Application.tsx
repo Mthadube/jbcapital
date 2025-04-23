@@ -36,12 +36,15 @@ const ApplicationContent: React.FC = () => {
         lastName: currentUser.lastName || '',
         idNumber: currentUser.idNumber || '',
         phone: currentUser.phone || '',
+        alternativePhone: currentUser.alternativePhone || '',
         email: currentUser.email || '',
         address: currentUser.address || '',
         suburb: currentUser.suburb || '',
         city: currentUser.city || '',
         state: currentUser.state || '',
         zipCode: currentUser.zipCode || '',
+        dateOfBirth: currentUser.dateOfBirth || '',
+        gender: currentUser.gender || '',
         
         // Employment information
         employmentStatus: currentUser.employmentStatus as any || "employed",
@@ -50,6 +53,14 @@ const ApplicationContent: React.FC = () => {
         yearsEmployed: currentUser.yearsEmployed || 0,
         monthlyIncome: currentUser.monthlyIncome || 0,
         employmentType: currentUser.employmentType as any || "full-time",
+        employmentSector: currentUser.employmentSector || '',
+        workAddress: currentUser.workAddress || '',
+        workCity: currentUser.workCity || '',
+        workCountry: currentUser.workCountry || 'South Africa',
+        workPostalCode: currentUser.workPostalCode || '',
+        workEmail: currentUser.workEmail || '',
+        workPhoneNumber: currentUser.workPhoneNumber || '',
+        paymentDate: currentUser.paymentDate || '',
         
         // Financial information
         creditScore: currentUser.creditScore || 0,
@@ -58,11 +69,14 @@ const ApplicationContent: React.FC = () => {
         monthlyDebt: currentUser.monthlyDebt || 0,
         rentMortgage: currentUser.rentMortgage || 0,
         carPayment: currentUser.carPayment || 0,
+        groceries: currentUser.groceries || 0,
         utilities: currentUser.utilities || 0,
         insurance: currentUser.insurance || 0,
         otherExpenses: currentUser.otherExpenses || 0,
         bankName: currentUser.bankName || '',
         accountType: currentUser.accountType || '',
+        accountNumber: currentUser.accountNumber || '',
+        bankingPeriod: currentUser.bankingPeriod || 0,
       });
       
       // Skip to Employment form if user is already logged in

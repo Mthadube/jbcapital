@@ -34,7 +34,7 @@ const FinancialForm: React.FC = () => {
     defaultValues: {
       bankName: formData.bankName || "",
       accountType: formData.accountType || "cheque",
-      accountNumber: (formData as any).accountNumber || "",
+      accountNumber: formData.accountNumber || "",
       bankingPeriod: formData.bankingPeriod || 0,
       existingLoans: formData.existingLoans || false,
       existingLoanAmount: formData.existingLoanAmount || 0,
@@ -47,7 +47,7 @@ const FinancialForm: React.FC = () => {
       insurance: formData.insurance || 0,
       otherExpenses: formData.otherExpenses || 0,
       savings: formData.savings || 0,
-      additionalFinancialInfo: (formData as any).additionalFinancialInfo || "",
+      additionalFinancialInfo: formData.additionalFinancialInfo || "",
     }
   });
   
@@ -79,12 +79,7 @@ const FinancialForm: React.FC = () => {
     updateFormData({
       bankName: data.bankName,
       accountType: data.accountType,
-      // Use object spreading with type assertions to fix TypeScript errors
-      ...{
-        accountNumber: data.accountNumber,
-        additionalFinancialInfo: data.additionalFinancialInfo,
-        debtToIncomeRatio: calculateDebtToIncomeRatio(data)
-      },
+      accountNumber: data.accountNumber,
       bankingPeriod: data.bankingPeriod,
       existingLoans: data.existingLoans,
       existingLoanAmount: data.existingLoanAmount,
@@ -97,11 +92,13 @@ const FinancialForm: React.FC = () => {
       insurance: data.insurance,
       otherExpenses: data.otherExpenses,
       savings: data.savings,
+      additionalFinancialInfo: data.additionalFinancialInfo,
       totalMonthlyExpenses: calculateTotalExpenses(data),
+      debtToIncomeRatio: calculateDebtToIncomeRatio(data)
     });
     
-      toast.success("Financial information saved!");
-      nextStep();
+    toast.success("Financial information saved!");
+    nextStep();
   };
   
   const calculateTotalExpenses = (data: FinancialInfoFormData) => {
