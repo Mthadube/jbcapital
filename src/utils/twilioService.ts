@@ -86,6 +86,8 @@ export const sendLoanStatusUpdate = async (
   
   if (status.toLowerCase() === 'approved') {
     message += ' Congratulations! Please log in to your account to view the details and complete the process.';
+  } else if (status.toLowerCase() === 'loan created') {
+    message += ' Your loan has been created and is being processed. We will notify you once the funds are ready for disbursement.';
   } else if (status.toLowerCase() === 'rejected') {
     message += ' Please contact our customer support for more information.';
   }

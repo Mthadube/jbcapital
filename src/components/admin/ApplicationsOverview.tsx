@@ -105,6 +105,40 @@ const ApplicationsOverview = () => {
   // Calculate average processing time (mock data for demo)
   const avgProcessingTime = "3.5 days";
   
+  // Calculate loan application status counts
+  const applicationStatusCounts = {
+    pendingReview: 0,
+    initialScreening: 0,
+    documentReview: 0,
+    creditAssessment: 0,
+    incomeVerification: 0,
+    finalDecision: 0,
+    approved: 0,
+    rejected: 0
+  };
+
+  applications.forEach(app => {
+    const status = (app.status || "").toLowerCase().trim();
+    
+    if (status.includes("credit_assessment") || status.includes("credit")) {
+      applicationStatusCounts.creditAssessment++;
+    } else if (status === "loan_created" || status.includes("document")) {
+      applicationStatusCounts.documentReview++;
+    } else if (status.includes("screening") || status === "new" || !status) {
+      applicationStatusCounts.initialScreening++;
+    } else if (status.includes("income") || status.includes("verification")) {
+      applicationStatusCounts.incomeVerification++;
+    } else if (status.includes("final") || status.includes("decision")) {
+      applicationStatusCounts.finalDecision++;
+    } else if (status === "funded" || status.includes("approved") || status.includes("accepted")) {
+      applicationStatusCounts.approved++;
+    } else if (status.includes("rejected") || status.includes("declined") || status.includes("denied")) {
+      applicationStatusCounts.rejected++;
+    } else {
+      applicationStatusCounts.pendingReview++;
+    }
+  });
+  
   // Handle card click to navigate
   const handleCardClick = (tab: string) => {
     navigate("/admin", { state: { activeTab: tab } });
@@ -204,25 +238,33 @@ const ApplicationsOverview = () => {
           <CardContent>
             <div className="space-y-4">
               {[
-                { status: "Pending Review", count: applications.filter(a => a.status === "Pending Review").length },
-                { status: "Initial Screening", count: applications.filter(a => a.status === "Initial Screening").length },
-                { status: "Document Review", count: applications.filter(a => a.status === "Document Review").length },
-                { status: "Credit Assessment", count: applications.filter(a => a.status === "Credit Assessment").length },
-                { status: "Income Verification", count: applications.filter(a => a.status === "Income Verification").length },
-                { status: "Final Decision", count: applications.filter(a => a.status === "Final Decision").length },
-                { status: "Approved", count: approvedApplications },
-                { status: "Rejected", count: rejectedApplications }
-              ].map(item => (
-                <div key={item.status} className="flex items-center">
-                  <div className="w-1/3 text-sm">{item.status}</div>
-                  <div className="w-2/3">
-                    <div className="flex items-center gap-2">
-                      <Progress 
-                        value={item.count ? (item.count / totalApplications) * 100 : 0} 
-                        className="h-2" 
+                { name: "Pending Review", value: applicationStatusCounts.pendingReview },
+                { name: "Initial Screening", value: applicationStatusCounts.initialScreening },
+                { name: "Document Review", value: applicationStatusCounts.documentReview },
+                { name: "Credit Assessment", value: applicationStatusCounts.creditAssessment },
+                { name: "Income Verification", value: applicationStatusCounts.incomeVerification },
+                { name: "Final Decision", value: applicationStatusCounts.finalDecision },
+                { name: "Approved", value: applicationStatusCounts.approved },
+                { name: "Rejected", value: applicationStatusCounts.rejected }
+              ].map((status, index) => (
+                <div key={index} className="flex items-center justify-between gap-4">
+                  <div className="min-w-[180px] flex-shrink-0">
+                    <p className="text-sm font-medium leading-none">{status.name}</p>
+                  </div>
+                  <div className="flex-1 relative h-2">
+                    <div className="absolute inset-0 rounded-full bg-secondary" />
+                    {status.value > 0 && (
+                      <div 
+                        className="absolute inset-0 rounded-full bg-blue-500"
+                        style={{ 
+                          width: `${(status.value / totalApplications) * 100}%`,
+                          transition: 'all 0.2s'
+                        }}
                       />
-                      <span className="text-sm w-8 text-muted-foreground">{item.count}</span>
-                    </div>
+                    )}
+                  </div>
+                  <div className="min-w-[40px] text-right">
+                    <span className="text-sm font-medium">{status.value}</span>
                   </div>
                 </div>
               ))}

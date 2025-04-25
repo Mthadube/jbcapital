@@ -31,7 +31,7 @@ interface Role {
 }
 
 const UserManagement = () => {
-  const { users, updateUser, addUser: addAppDataUser } = useAppData();
+  const { users, updateUser, addUser: addAppDataUser, refreshData } = useAppData();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
@@ -63,12 +63,20 @@ const UserManagement = () => {
     }
   ]);
 
+  // Sort users by creation date in descending order
+  const sortedUsers = [...users].sort((a, b) => {
+    const dateA = new Date(a.registrationDate || 0);
+    const dateB = new Date(b.registrationDate || 0);
+    return dateB.getTime() - dateA.getTime();
+  });
+
   // Filter users based on search term
-  const filteredUsers = users.filter(user => 
-    (user.firstName + " " + user.lastName).toLowerCase().includes(searchTerm.toLowerCase()) || 
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.role || "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = sortedUsers.filter(user => {
+    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    return fullName.includes(searchTerm.toLowerCase()) ||
+           user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           user.id.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   // User Management Functions
   const handleAddUser = () => {

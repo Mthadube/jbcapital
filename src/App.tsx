@@ -17,6 +17,8 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import AdminLogin from "./pages/AdminLogin";
+import ContractSigning from "./pages/ContractSigning";
+import LoanDetail from "./pages/LoanDetail";
 import { AppDataProvider } from "./utils/AppDataContext";
 import { ThemeProvider } from "./utils/ThemeProvider";
 
@@ -42,9 +44,11 @@ const App = () => (
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/application/:id" element={<ApplicationDetail />} />
               <Route path="/admin/applications/:id" element={<ApplicationDetail />} />
+              <Route path="/admin/loan/:id" element={<LoanDetail />} />
               <Route path="/admin/user/:id" element={<AdminUserDetail />} />
               <Route path="/profile" element={<UserProfileDashboard />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/sign-contract/:contractId" element={<ContractSigning />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -46,6 +46,7 @@ export interface User {
   suburb?: string;
   city: string;
   state: string;
+  province?: string;
   zipCode: string;
   country?: string;
   employmentStatus?: string;
@@ -105,6 +106,7 @@ export interface Loan {
   status: 'active' | 'pending' | 'completed' | 'rejected' | 'approved';
   dateApplied: string;
   dateIssued?: string;
+  disbursementDate?: string;
   paidAmount?: number;
   paidMonths?: number;
   remainingPayments?: number;
@@ -151,18 +153,31 @@ export interface StatusHistoryItem {
 export interface Application {
   id: string;
   userId: string;
-  name: string;
-  status: ApplicationStatus;
   date: string;
+  createdAt: string;
+  status: string;
   amount: string;
-  completion?: number;
-  requiredAction?: string;
-  statusHistory?: StatusHistoryItem[];
+  firstName: string;
+  lastName: string;
+  creditScore: number;
+  debtToIncome: number;
   loanDetails?: {
-    purpose?: string;
-    term?: number;
-    monthlyPayment?: string;
+    purpose: string;
+    term: number;
+    collateral?: string;
+  };
+  loanInfo?: {
+    purpose: string;
+    amount: number;
+    term: number;
+    monthlyPayment?: number;
     interestRate?: number;
+    totalRepayment?: number;
+    collateral?: {
+      type: string;
+      value: number;
+      description: string;
+    };
   };
 }
 

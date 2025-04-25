@@ -19,7 +19,7 @@ import { useAppData } from "@/utils/AppDataContext";
 import { toast } from "sonner";
 import * as api from "@/utils/api";
 import { generateRandomId } from "@/utils/helpers";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { sendPaymentReminder, sendPaymentConfirmation } from '@/utils/twilioService';
 import { cn } from "@/lib/utils";
@@ -30,6 +30,9 @@ const LoanManagement = () => {
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [processingLoanId, setProcessingLoanId] = useState<string | null>(null);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [selectedLoanId, setSelectedLoanId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Fetch data when component mounts
@@ -99,8 +102,15 @@ const LoanManagement = () => {
     }
   };
 
+  // Sort loans by creation date in descending order
+  const sortedLoans = [...loans].sort((a, b) => {
+    const dateA = new Date(a.dateApplied || 0);
+    const dateB = new Date(b.dateApplied || 0);
+    return dateB.getTime() - dateA.getTime();
+  });
+
   // Filter loans based on search term and status filters
-  const filteredLoans = loans.filter(loan => {
+  const filteredLoans = sortedLoans.filter(loan => {
     const user = users.find(u => u.id === loan.userId);
     const fullName = user ? `${user.firstName} ${user.lastName}` : "";
     
@@ -137,29 +147,49 @@ const LoanManagement = () => {
 
   // Process payment for a loan
   const handleProcessPayment = async (loanId: string) => {
-    setProcessingLoanId(loanId);
+    setSelectedLoanId(loanId);
+    setShowPaymentDialog(true);
+  };
+
+  // Handle payment submission
+  const handlePaymentSubmission = async () => {
+    if (!selectedLoanId) return;
+    
+    setProcessingLoanId(selectedLoanId);
     try {
-      const loan = loans.find(l => l.id === loanId);
+      const loan = loans.find(l => l.id === selectedLoanId);
       if (!loan) {
         toast.error("Loan not found");
+        return;
+      }
+
+      const amount = parseFloat(paymentAmount);
+      if (isNaN(amount) || amount <= 0) {
+        toast.error("Please enter a valid payment amount");
         return;
       }
       
       // Get user information
       const user = users.find(u => u.id === loan.userId);
       
-      // Calculate updated values
+      // Calculate new paid amount and months
+      const newPaidAmount = (loan.paidAmount || 0) + amount;
+      const newPaidMonths = Math.floor(newPaidAmount / loan.monthlyPayment);
+      const nextPaymentDate = new Date();
+      nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+      
+      // Update loan with new values
       const updatedLoan = {
         ...loan,
-        paidAmount: (loan.paidAmount || 0) + loan.monthlyPayment,
-        paidMonths: (loan.paidMonths || 0) + 1,
+        paidAmount: newPaidAmount,
+        paidMonths: newPaidMonths,
+        nextPaymentDue: nextPaymentDate.toISOString().split('T')[0]
       };
       
-      // Update using API
-      const success = await updateLoan(loanId, updatedLoan);
+      const success = await updateLoan(selectedLoanId, updatedLoan);
       
       if (success) {
-        toast.success(`Payment of R${loan.monthlyPayment.toLocaleString()} processed for loan ${loanId}`);
+        toast.success(`Payment of R${amount.toLocaleString()} processed for loan ${selectedLoanId}`);
         
         // Send payment confirmation SMS if user has phone number
         if (user && user.phone) {
@@ -167,7 +197,7 @@ const LoanManagement = () => {
             const smsResult = await sendPaymentConfirmation(
               user.phone,
               user.firstName,
-              loan.monthlyPayment
+              amount
             );
             
             if (smsResult.success) {
@@ -186,12 +216,16 @@ const LoanManagement = () => {
             id: `payment-confirmation-${Date.now()}`,
             userId: user.id,
             title: "Payment Received",
-            message: `Your payment of R${loan.monthlyPayment.toLocaleString()} has been received and processed. Thank you!`,
+            message: `Your payment of R${amount.toLocaleString()} has been received and processed. Thank you!`,
             type: "success",
             date: new Date().toISOString(),
             read: false
           });
         }
+
+        setShowPaymentDialog(false);
+        setPaymentAmount("");
+        refreshData();
       } else {
         toast.error("Failed to process payment");
       }
@@ -778,6 +812,44 @@ const LoanManagement = () => {
           </Tabs>
         </CardContent>
       </Card>
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Process Payment</DialogTitle>
+            <DialogDescription>
+              Enter the payment amount to process for this loan.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="amount" className="text-right">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                className="col-span-3"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                placeholder="Enter payment amount"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowPaymentDialog(false);
+              setPaymentAmount("");
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handlePaymentSubmission} disabled={processingLoanId === selectedLoanId}>
+              {processingLoanId === selectedLoanId ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                "Process Payment"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

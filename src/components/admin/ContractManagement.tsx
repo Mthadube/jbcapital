@@ -46,20 +46,20 @@ const ContractManagement = () => {
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Filter contracts based on search and status
-  const filteredContracts = contracts.filter(contract => {
-    const loan = loans.find(l => l.id === contract.loanId);
-    const user = users.find(u => u.id === contract.userId);
-    const userName = user ? `${user.firstName} ${user.lastName}` : '';
-    
-    const matchesSearch = 
-      contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.loanId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      userName.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter.length === 0 || statusFilter.includes(contract.status);
-    
-    return matchesSearch && matchesStatus;
+  // Sort contracts by creation date in descending order
+  const sortedContracts = [...contracts].sort((a, b) => {
+    const dateA = new Date(a.dateCreated || 0);
+    const dateB = new Date(b.dateCreated || 0);
+    return dateB.getTime() - dateA.getTime();
+  });
+
+  // Filter contracts based on search term and status
+  const filteredContracts = sortedContracts.filter(contract => {
+    const searchMatch = contract.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       contract.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       contract.status.toLowerCase().includes(searchTerm.toLowerCase());
+    const statusMatch = statusFilter.length === 0 || statusFilter.includes(contract.status);
+    return searchMatch && statusMatch;
   });
 
   // Handle generate contract

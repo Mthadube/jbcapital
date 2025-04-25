@@ -122,8 +122,15 @@ export const WORKFLOW_STATUSES = [
   "rejected"
 ] as const;
 
-// Export WORKFLOW_STATUSES as APPLICATION_STATUSES to avoid breaking existing code
-export const APPLICATION_STATUSES = WORKFLOW_STATUSES;
+// Application statuses (independent constant)
+export const APPLICATION_STATUSES = [
+  "pending",
+  "document_verification", 
+  "credit_assessment",
+  "final_review",
+  "approved",
+  "rejected"
+] as const;
 
 // Status constants for badges
 const badgeVariants = {
@@ -138,6 +145,14 @@ const badgeVariants = {
 // Override the Application interface to include our new status types
 interface ExtendedApplication extends Omit<Application, 'status'> {
   status: ApplicationStatus;
+  loanDetails?: {
+    purpose: string;
+    term: number;
+    collateral?: string;
+    interestRate?: number;
+    monthlyPayment?: number;
+  };
+  requiredAction?: string;
 }
 
 const ApplicationProcessing = () => {
@@ -154,6 +169,25 @@ const ApplicationProcessing = () => {
   const [filterStatus, setFilterStatus] = useState<string | undefined>(undefined);
   const [filterDateFrom, setFilterDateFrom] = useState<string | undefined>(undefined);
   const [filterDateTo, setFilterDateTo] = useState<string | undefined>(undefined);
+
+  // Add handleStatusChange function
+  const handleStatusChange = async (applicationId: string, newStatus: ApplicationStatus) => {
+    try {
+      await updateApplication(applicationId, { status: newStatus });
+      toast.success(`Application status updated to ${getStatusDisplayName(newStatus)}`);
+      refreshData();
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      toast.error('Failed to update application status');
+    }
+  };
+
+  // Add handleViewApplicantProfile function
+  const handleViewApplicantProfile = (application: Application) => {
+    const user = getUserById(application.userId);
+    setSelectedUserForProfile(user);
+    setShowUserProfileDrawer(true);
+  };
 
   // Filter applications based on search term and status filters
   const filteredApplications = applications
@@ -205,9 +239,9 @@ const ApplicationProcessing = () => {
   };
 
   // Handle viewing details of an application
-  const handleViewDetails = (app: any) => {
+  const handleViewDetails = (app: ExtendedApplication) => {
     setCurrentApplication(app);
-    navigate(`/admin/applications/${app.id}`);
+    navigate(`/admin/application/${app.id}`);
   };
 
   // Advance the application to the next stage in the workflow
@@ -246,11 +280,11 @@ const ApplicationProcessing = () => {
   };
 
   // Request more information for an application
-  const handleRequestMoreInfo = (app: any) => {
+  const handleRequestMoreInfo = (app: ExtendedApplication) => {
     updateApplication(app.id, { 
       requiredAction: "Additional information required"
-    });
-    toast.info(`Request for more information sent to applicant`);
+    } as Partial<ExtendedApplication>);
+    toast.success(`Request for more information sent to applicant`);
   };
 
   // Handle search input
@@ -291,12 +325,12 @@ const ApplicationProcessing = () => {
 
   // Add a helper function to prepare loan data with consistent formatting
   const prepareLoanData = (
-    application: Application, 
+    application: ExtendedApplication, 
     userId: string,
     useApplicationId: boolean = false
   ): any => {
     // Get the loan amount as a number - remove currency symbols and commas
-    const amount = parseFloat(application.amount.replace(/[^0-9.]/g, ''));
+    const amount = parseFloat(application.amount.toString().replace(/[^0-9.]/g, ''));
     
     // Get current date for issue date
     const currentDate = new Date().toISOString().split('T')[0];
@@ -378,242 +412,6 @@ const ApplicationProcessing = () => {
   };
 
   // Function to create a loan from an application
-  const createLoanFromApplication = (application: ExtendedApplication, userId: string) => {
-    return prepareLoanData(application, userId, true);
-  };
-
-  // Fix handleStatusChange function to handle the new statuses
-  const handleStatusChange = async (applicationId: string, newStatus: ApplicationStatus) => {
-    try {
-      const application = applications.find(app => app.id === applicationId);
-      if (!application) {
-        toast.error("Application not found");
-        return false;
-      }
-      
-      // Get the user for this application
-      const user = users.find(u => u.id === application.userId);
-      
-      // Update application status
-      const success = await updateApplication(applicationId, {
-        status: newStatus as any
-      });
-      
-      if (success) {
-        // Create a notification
-        const notificationType = getNotificationTypeForStatus(newStatus);
-        
-        // Get user name if user exists
-        const userName = user ? `${user.firstName} ${user.lastName}` : "Unknown user";
-        
-        // Create notification for admin
-        addNotification({
-          id: `app-status-${Date.now()}`,
-          userId: "",
-          title: `Application ${getStatusDisplayName(newStatus)}`,
-          message: `Application ${application.id} from ${userName} has been ${getStatusDisplayName(newStatus)}`,
-          type: notificationType,
-          date: new Date().toISOString(),
-          read: false
-        });
-        
-        // Also create notification for the user (if user exists)
-        if (user) {
-          addNotification({
-            id: `user-app-status-${Date.now()}`,
-            userId: user.id, // Target specific user
-            title: `Your loan application has been ${getStatusDisplayName(newStatus)}`,
-            message: getStatusMessage(newStatus, application.id),
-            type: notificationType,
-            date: new Date().toISOString(),
-            read: false
-          });
-          
-          // Send SMS notification to the user
-          if (user.phone) {
-            try {
-              console.log(`Attempting to send status update SMS to ${user.phone} for user ${user.firstName}, status: ${newStatus}`);
-              
-              const formattedPhone = user.phone.replace(/\D/g, '');
-              console.log(`Formatted phone number: ${formattedPhone}`);
-              
-              const smsResult = await sendLoanStatusUpdate(
-                formattedPhone,
-                user.firstName,
-                getStatusDisplayName(newStatus),
-                application.id
-              );
-              
-              if (smsResult.success) {
-                console.log('Status update SMS sent successfully:', smsResult.data);
-              } else {
-                console.error('Failed to send status update SMS:', smsResult.error);
-                // Log detailed error info for debugging
-                if (smsResult.error?.response) {
-                  console.error('SMS API response error:', smsResult.error.response.data);
-                }
-              }
-            } catch (smsError) {
-              console.error('Exception during SMS sending:', smsError);
-              // Don't throw the error, just log it to avoid breaking the application flow
-            }
-          } else {
-            console.log(`No phone number available for user ${user.id} - SMS notification skipped`);
-          }
-        }
-        
-        toast.success(`Application status updated to ${getStatusDisplayName(newStatus)}`);
-        return true;
-      } else {
-        toast.error("Failed to update application status");
-        return false;
-      }
-    } catch (error) {
-      console.error("Error updating application status:", error);
-      toast.error("An error occurred while updating status");
-      return false;
-    }
-  };
-  
-  // Get notification type based on application status
-  const getNotificationTypeForStatus = (status: string): string => {
-    switch (status) {
-      case "approved":
-        return "application";
-      case "rejected":
-        return "warning";
-      case "pending":
-        return "document";
-      default:
-        return "system";
-    }
-  };
-  
-  // Get message for user notification based on status
-  const getStatusMessage = (status: string, applicationId: string): string => {
-    switch (status) {
-      case "approved":
-        return `Congratulations! Your loan application ${applicationId} has been approved. Please check your dashboard for next steps.`;
-      case "rejected":
-        return `We regret to inform you that your loan application ${applicationId} has been rejected. Please contact our support team for more information.`;
-      case "pending":
-        return `Your loan application ${applicationId} is now pending additional review. We may contact you for more information.`;
-      default:
-        return `Your loan application ${applicationId} status has been updated to ${getStatusDisplayName(status)}.`;
-    }
-  };
-
-  // View the applicant profile
-  const handleViewApplicantProfile = (app: any) => {
-    // Find the user associated with this application
-    const user = getUserById(app.userId);
-    
-    if (user) {
-      navigate(`/admin/user/${user.id}`);
-    } else {
-      toast.error("User data not found", {
-        description: "Could not find user associated with this application"
-      });
-    }
-  };
-
-  // Find the next workflow step for an application
-  const getNextWorkflowStep = (currentStatus: string): string | null => {
-    const currentStep = WORKFLOW_STEPS.find(step => step.id === currentStatus);
-    return currentStep?.nextStep || null;
-  };
-
-  // Get the workflow step object by status ID
-  const getWorkflowStep = (statusId: string) => {
-    return WORKFLOW_STEPS.find(step => step.id === statusId) || WORKFLOW_STEPS[0];
-  };
-
-  // Create a component to visualize workflow progress
-  const WorkflowProgressBar = ({ currentStatus }: { currentStatus: string }) => {
-    // Filter out the final states (approved/rejected) for the progress bar
-    const processingSteps = WORKFLOW_STEPS.filter(step => 
-      step.id !== "approved" && step.id !== "rejected"
-    );
-    
-    // Find the index of the current step
-    const currentIndex = processingSteps.findIndex(step => step.id === currentStatus);
-    
-    // If we're in a final state, show the appropriate indicator
-    if (currentStatus === "approved" || currentStatus === "rejected") {
-      return (
-        <div className="flex items-center mt-1">
-          {currentStatus === "approved" ? (
-            <div className="flex items-center text-green-600">
-              <CheckCircle className="h-4 w-4 mr-1" />
-              <span className="text-xs font-medium">Approved</span>
-          </div>
-          ) : (
-            <div className="flex items-center text-red-600">
-              <XCircle className="h-4 w-4 mr-1" />
-              <span className="text-xs font-medium">Rejected</span>
-            </div>
-          )}
-        </div>
-      );
-    }
-    
-    return (
-      <div className="flex items-center space-x-1 mt-1">
-        {processingSteps.map((step, index) => {
-          // Determine if this step is current, completed, or upcoming
-          const isCompleted = index <= currentIndex;
-          const isCurrent = index === currentIndex;
-          
-          return (
-            <div key={step.id} className="flex items-center">
-              {/* Progress circle */}
-              <div 
-                className={`flex-shrink-0 h-4 w-4 rounded-full flex items-center justify-center ${
-                  isCurrent 
-                    ? "bg-blue-500 ring-2 ring-blue-200" 
-                    : isCompleted
-                      ? "bg-blue-500"
-                      : "bg-gray-200"
-                }`}
-              >
-                {isCompleted && !isCurrent && (
-                  <Check className="h-2.5 w-2.5 text-white" />
-                )}
-        </div>
-              
-              {/* Connecting line (except for the last item) */}
-              {index < processingSteps.length - 1 && (
-                <div 
-                  className={`h-0.5 w-6 ${
-                    index < currentIndex ? "bg-blue-500" : "bg-gray-200"
-                  }`}
-                ></div>
-              )}
-      </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // Component to render a workflow status badge with icon and tooltip
-  const WorkflowStatusBadge = ({ status }: { status: string }) => {
-    const step = getWorkflowStep(status);
-    
-    return (
-      <div className="flex flex-col">
-        <Badge variant={getStatusVariant(status)}>
-          <div className="flex items-center">
-            {step.icon}
-            <span className="ml-1">{step.name}</span>
-          </div>
-        </Badge>
-        <div className="text-xs text-muted-foreground mt-1">{step.description}</div>
-      </div>
-    );
-  };
-
-  // Update the handleCreateLoan function to use the helper
   const handleCreateLoan = (application: ExtendedApplication) => {
     // Only create loans from approved applications
     if (application.status !== 'approved') {
@@ -640,11 +438,25 @@ const ApplicationProcessing = () => {
         .then(response => {
           console.log('Loan creation response:', response);
           if (response.success) {
-            // Update application status to 'funded'
-            updateApplication(application.id, { status: 'funded' })
+            // Update application status to indicate loan created
+            updateApplication(application.id, { status: 'loan_created' })
               .then(() => {
                 refreshData();
                 toast.success('Loan created successfully');
+
+                // Get user for notifications
+                const user = users.find(u => u.id === userId);
+                if (user && user.phone) {
+                  // Send appropriate SMS about loan creation
+                  sendLoanStatusUpdate(
+                    user.phone,
+                    user.firstName,
+                    'Loan Created',
+                    application.id
+                  ).catch(error => {
+                    console.error('Error sending SMS:', error);
+                  });
+                }
                 
                 // Navigate to the loan management tab after a short delay to allow data refresh
                 setTimeout(() => {
@@ -686,7 +498,7 @@ const ApplicationProcessing = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => handleViewDetails(application)}>
+          <DropdownMenuItem onClick={() => handleViewDetails(application as ExtendedApplication)}>
             View Details
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleViewApplicantProfile(application)}>
